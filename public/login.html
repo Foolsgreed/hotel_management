@@ -1,148 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Grand Palace Hotel</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(to bottom, rgba(15, 17, 21, 0.4), var(--bg-dark)), url('/images/suite.jpg') center/cover;
-        }
-        .auth-box {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            padding: 3rem 2.5rem;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            text-align: center;
-            animation: fadeIn 0.8s ease;
-        }
-        .auth-box h2 {
-            margin-bottom: 2rem;
-            color: var(--primary);
-            font-size: 2rem;
-        }
-        .input-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #ddd;
-            font-size: 0.9rem;
-        }
-        .input-group input {
-            width: 100%;
-            padding: 1rem;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            color: #fff;
-            font-family: inherit;
-            outline: none;
-            transition: var(--transition);
-        }
-        .input-group input:focus {
-            border-color: var(--primary);
-            background: rgba(0,0,0,0.4);
-        }
-        .auth-box .btn {
-            width: 100%;
-            margin-top: 1rem;
-        }
-        .auth-footer {
-            margin-top: 1.5rem;
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-        .auth-footer a {
-            color: var(--primary);
-            text-decoration: none;
-        }
-        .auth-footer a:hover {
-            text-decoration: underline;
-        }
-        #error-msg {
-            color: #ff4d4d;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="auth-container">
-        <div class="auth-box">
-            <a href="/" style="text-decoration: none;"><div class="logo" style="margin-bottom: 1rem; font-size:1.2rem;">Grand Palace</div></a>
-            <h2>Welcome Back</h2>
-            <div id="error-msg"></div>
-            <form id="login-form">
-                <div class="input-group">
-                    <label>Email Address</label>
-                    <input type="email" id="email" required placeholder="Enter your email">
-                </div>
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="password" required placeholder="Enter your password">
-                </div>
-                <button type="submit" class="btn btn-primary" id="login-btn">Login</button>
-            </form>
-            <div class="auth-footer">
-                Don't have an account? <a href="/register.html">Register here</a>
-            </div>
-        </div>
-    </div>
+<script>
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+        // 1. Chặn tuyệt đối việc load lại trang hoặc chuyển hướng mặc định
+        e.preventDefault();
 
-    <script>
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const btn = document.getElementById('login-btn');
-            const errorMsg = document.getElementById('error-msg');
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const btn = document.getElementById('login-btn');
+        const errorMsg = document.getElementById('error-msg');
 
-            btn.textContent = 'Logging in...';
-            btn.disabled = true;
-            errorMsg.style.display = 'none';
+        // 2. Tạo hiệu ứng UI khi đang "xử lý giả"
+        const originalText = btn.textContent;
+        btn.textContent = 'Logging in...';
+        btn.disabled = true;
+        errorMsg.style.display = 'none';
 
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
+        // 3. Giả lập độ trễ mạng 1 giây
+        setTimeout(() => {
+            // ==============================================================
+            // TODO: VAI TRÒ 2 & 4 SẼ THAY THẾ LOGIC GIẢ LẬP NÀY BẰNG FETCH API
+            // ==============================================================
 
-                const data = await response.json();
-                
-                if (response.ok) {
-                    // Save to localStorage
-                    localStorage.setItem('guest', JSON.stringify(data.guest));
-                    alert('Login successful!');
-                    window.location.href = '/';
-                } else {
-                    errorMsg.textContent = data.message || 'Login failed';
-                    errorMsg.style.display = 'block';
-                }
-            } catch (err) {
-                errorMsg.textContent = 'Network error. Please try again.';
+            // Giả lập tài khoản mẫu để bạn có thể Demo thành công/thất bại
+            if (email === 'guest@gmail.com' && password === '123456') {
+                alert('Đăng nhập thành công! (Đây là logic giả lập để Demo giao diện)');
+
+                // Ở bản Final sẽ chuyển trang, nhưng ở bản Demo này ta giữ nguyên trang
+                // để tránh lỗi trắng xóa khi chưa có Backend.
+                console.log('User data saved to local (Demo Only)');
+            } else {
+                // Hiển thị lỗi ngay trên trang hiện tại
+                errorMsg.textContent = 'Email hoặc mật khẩu không đúng (Dùng: guest@gmail.com / 123456)';
                 errorMsg.style.display = 'block';
-            } finally {
-                btn.textContent = 'Login';
-                btn.disabled = false;
             }
-        });
-    </script>
-</body>
-</html>
+
+            // 4. QUAN TRỌNG: Trả lại trạng thái nút bấm để không bị kẹt
+            btn.textContent = originalText;
+            btn.disabled = false;
+
+        }, 1000);
+    });
+</script>

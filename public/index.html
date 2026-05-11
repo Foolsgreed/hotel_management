@@ -19,7 +19,7 @@
                 <li><a href="#rooms">Rooms</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
-                <li><a href="/login.html" class="btn btn-outline">Login</a></li>
+                <li><a href="#" onclick="event.preventDefault();" id="login-nav-btn" class="btn btn-outline">Login</a></li>
             </ul>
         </nav>
     </header>
@@ -29,66 +29,12 @@
             <h1>Experience Unmatched Elegance</h1>
             <p>Your perfect escape awaits in the heart of the city.</p>
         </div>
-        
-        <!-- JW Marriott style Booking Bar -->
-        <div class="booking-bar">
-            <form id="search-form" class="booking-form">
-                <div class="form-group">
-                    <label>NGÀY (1 ĐÊM)</label>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <input type="date" id="search-arrival" required>
-                        <span style="color:#aaa;">→</span>
-                        <input type="date" id="search-departure" required>
-                    </div>
-                </div>
-                <div class="form-divider"></div>
-                <div class="form-group" style="position: relative;" id="guest-group">
-                    <label>PHÒNG & KHÁCH</label>
-                    <div id="guests-display" style="color:#fff; font-size:1rem; cursor:pointer;" onclick="toggleGuestPopover()">
-                        1 Phòng, 2 Khách
-                    </div>
-                    <div id="guests-popover" class="guests-popover" style="display:none;">
-                        <span class="close-popover" onclick="toggleGuestPopover()">×</span>
-                        <h4 style="margin-bottom: 1rem; color: #555; font-size: 0.8rem; text-transform: uppercase;">Giới hạn Đặt phòng</h4>
-                        <div class="counter-row">
-                            <div><strong>Số phòng</strong><br><small style="color:#888; font-size: 0.75rem;">(Tối đa: 5 phòng)</small></div>
-                            <div class="counter">
-                                <button type="button" onclick="updateCount('rooms', -1)">-</button>
-                                <span id="count-rooms" style="color: black;">1</span>
-                                <button type="button" onclick="updateCount('rooms', 1)">+</button>
-                            </div>
-                        </div>
-                        <div class="counter-row">
-                            <div><strong>Người lớn</strong><br><small style="color:#888; font-size: 0.75rem;">(Tối đa: 16 người lớn)</small></div>
-                            <div class="counter">
-                                <button type="button" onclick="updateCount('adults', -1)">-</button>
-                                <span id="count-adults" style="color: black;">2</span>
-                                <button type="button" onclick="updateCount('adults', 1)">+</button>
-                            </div>
-                        </div>
-                        <div class="counter-row">
-                            <div><strong>Trẻ em</strong><br><small style="color:#888; font-size: 0.75rem;">(Dưới 12 tuổi)</small></div>
-                            <div class="counter">
-                                <button type="button" onclick="updateCount('children', -1)">-</button>
-                                <span id="count-children" style="color: black;">0</span>
-                                <button type="button" onclick="updateCount('children', 1)">+</button>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 1rem; padding: 0.5rem;" onclick="toggleGuestPopover()">OK</button>
-                    </div>
-                </div>
-                <div class="form-divider"></div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary btn-search">Xem Mức Giá</button>
-                </div>
-            </form>
-        </div>
     </section>
 
     <section id="rooms" class="rooms-section">
         <div class="section-title">
-            <h2 id="room-section-title">Phòng Đề Cử</h2>
-            <p id="room-section-desc">Vui lòng chọn ngày và số lượng khách để xem các gợi ý phòng tốt nhất.</p>
+            <h2 id="room-section-title">Danh sách Hạng Phòng</h2>
+            <p id="room-section-desc">Khám phá không gian nghỉ dưỡng đỉnh cao tại khách sạn của chúng tôi.</p>
         </div>
         <div class="rooms-grid" id="rooms-container">
             <!-- Dynamically injected -->

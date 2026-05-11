@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle auth state
     const guest = JSON.parse(localStorage.getItem('guest'));
-    const loginLink = document.querySelector('a[href="/login.html"]');
+    const loginLink = document.getElementById('login-nav-btn');
     if (guest && loginLink) {
         loginLink.outerHTML = `
             <div style="display:flex; align-items:center; gap: 1rem;">
@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    initSearchBar();
     loadDefaultRooms();
 });
 
@@ -64,8 +63,8 @@ async function loadDefaultRooms() {
                     </p>
                     <p>${rec.RoomDesc}</p>
                     <div class="room-meta">
-                        <button class="btn btn-outline" style="width: 100%" onclick="document.getElementById('search-arrival').focus(); window.scrollTo({top: 0, behavior: 'smooth'});">
-                            Nhập ngày để đặt
+                        <button class="btn btn-outline" style="width: 100%" onclick="openRoomModal('${rec.RoomType}', '${rec.RoomDesc}', '${rec.RoomImg}', ${rec.Occupancy})">
+                            Xem Chi Tiết
                         </button>
                     </div>
                 </div>
@@ -76,150 +75,6 @@ async function loadDefaultRooms() {
     } catch (e) {
         console.error(e);
         container.innerHTML = '<p style="color:red">Lỗi tải dữ liệu phòng mặc định.</p>';
-    }
-}
-
-function initSearchBar() {
-    const arrivalInput = document.getElementById('search-arrival');
-    const departureInput = document.getElementById('search-departure');
-    const searchForm = document.getElementById('search-form');
-
-    // Default dates: Today to Tomorrow
-    const today = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
-
-    arrivalInput.value = today.toISOString().split('T')[0];
-    departureInput.value = tomorrow.toISOString().split('T')[0];
-
-    // Ensure departure > arrival
-    arrivalInput.addEventListener('change', () => {
-        if (departureInput.value <= arrivalInput.value) {
-            let nextDay = new Date(arrivalInput.value);
-            nextDay.setDate(nextDay.getDate() + 1);
-            departureInput.value = nextDay.toISOString().split('T')[0];
-        }
-    });
-
-    searchForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const arrivalDate = arrivalInput.value;
-        const departureDate = departureInput.value;
-        const guests = window.guestCounts.adults + window.guestCounts.children;
-        const numRooms = window.guestCounts.rooms;
-
-        await searchRooms(arrivalDate, departureDate, guests, numRooms);
-    });
-}
-
-// Popover Logic
-window.guestCounts = { rooms: 1, adults: 2, children: 0 };
-
-function toggleGuestPopover() {
-    const popover = document.getElementById('guests-popover');
-    popover.style.display = popover.style.display === 'none' ? 'block' : 'none';
-}
-
-function updateCount(type, change) {
-    let newVal = window.guestCounts[type] + change;
-
-    // Limits
-    if (type === 'rooms' && (newVal < 1 || newVal > 5)) return;
-    if (type === 'adults' && (newVal < 1 || newVal > 16)) return;
-    if (type === 'children' && (newVal < 0 || newVal > 10)) return;
-
-    // Enforce basic max capacity
-    if (type === 'adults' || type === 'children') {
-        const totalGuests = (type === 'adults' ? newVal : window.guestCounts.adults) +
-            (type === 'children' ? newVal : window.guestCounts.children);
-        if (totalGuests > window.guestCounts.rooms * 8) {
-            // Cannot exceed 8 per room (suite max is 16 which is 2*8 maybe)
-            return;
-        }
-    }
-
-    window.guestCounts[type] = newVal;
-    document.getElementById(`count-${type}`).textContent = newVal;
-
-    // Update Display Text
-    const totalKhach = window.guestCounts.adults + window.guestCounts.children;
-    document.getElementById('guests-display').textContent = `${window.guestCounts.rooms} Phòng, ${totalKhach} Khách`;
-}
-
-async function searchRooms(arrivalDate, departureDate, guests, numRooms) {
-    const container = document.getElementById('rooms-container');
-    const title = document.getElementById('room-section-title');
-    const desc = document.getElementById('room-section-desc');
-
-    container.innerHTML = '<div class="loading-spinner">Mô phỏng hệ thống gợi ý phòng...</div>';
-    title.textContent = 'Đang tìm kiếm...';
-    desc.textContent = '';
-
-    // Smooth scroll to results
-    document.getElementById('rooms').scrollIntoView({ behavior: 'smooth' });
-
-    try {
-        const response = await fetch('/api/rooms/search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ arrivalDate, departureDate, guests, numRooms })
-        });
-
-        if (!response.ok) throw new Error('Network error');
-        const recommendations = await response.json();
-
-        container.innerHTML = '';
-        title.textContent = 'Phòng Đề Cử';
-        desc.textContent = `Các phương án tối ưu nhất dành cho ${guests} khách (${arrivalDate} → ${departureDate})`;
-
-        if (recommendations.length === 0) {
-            container.innerHTML = '<p style="text-align:center;width:100%;color:#a0a0a0;font-size:1.2rem;">Rất tiếc! Không còn phòng trống cho số lượng khách và thời gian bạn chọn.</p>';
-            return;
-        }
-
-        recommendations.forEach(rec => {
-            const card = document.createElement('div');
-            card.className = 'room-card';
-
-            card.innerHTML = `
-                <div class="room-img-wrapper" style="cursor:pointer;" onclick="openRoomModal('${rec.RoomType}', '${rec.RoomDesc}', '${rec.RoomImg}', ${rec.Occupancy})">
-                    <img src="/images/${rec.RoomImg}" alt="${rec.RoomType}" onerror="this.src='/images/deluxe.jpg'">
-                    <div class="room-price-tag">$${rec.totalPrice} / đêm</div>
-                </div>
-                <div class="room-info">
-                    <h3 style="cursor:pointer;" onclick="openRoomModal('${rec.RoomType}', '${rec.RoomDesc}', '${rec.RoomImg}', ${rec.Occupancy})">${rec.roomsNeeded} x ${rec.RoomType}</h3>
-                    <p style="color:var(--primary); font-weight:600; font-size:0.9rem; margin-bottom: 0.5rem;">
-                        Tối đa: ${rec.Occupancy * rec.roomsNeeded} khách
-                    </p>
-                    <p>${rec.RoomDesc}</p>
-                    <div class="room-meta">
-                        <span class="meta-item">
-                            ${rec.AvailableCount >= rec.roomsNeeded ? `<span style="color:#4CAF50">✓ Đủ phòng trống</span>` : `<span style="color:red">Chỉ còn ${rec.AvailableCount} phòng</span>`}
-                        </span>
-                        <button class="btn btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;" 
-                            ${rec.AvailableCount < rec.roomsNeeded ? 'disabled' : ''}
-                            onclick="bookRoom('${rec.RoomType}', '${arrivalDate}', '${departureDate}', ${rec.roomsNeeded})">
-                            Đặt Gói Này
-                        </button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-
-    } catch (error) {
-        console.error('Error fetching search results:', error);
-        container.innerHTML = '<p style="text-align:center;width:100%;color:red">Lỗi tải dữ liệu. Vui lòng thử lại.</p>';
-    }
-}
-
-function bookRoom(type, arrival, departure, quantity) {
-    const guest = JSON.parse(localStorage.getItem('guest'));
-    if (!guest) {
-        alert('Vui lòng đăng nhập để tiến hành đặt phòng!');
-        window.location.href = '/login.html';
-    } else {
-        window.location.href = `/book.html?type=${encodeURIComponent(type)}&arrival=${arrival}&departure=${departure}&qty=${quantity}`;
     }
 }
 
