@@ -104,25 +104,34 @@
             }
             
             const params = new URLSearchParams(window.location.search);
-            const type = params.get('type');
+            const combo = params.get('combo');
             const arrival = params.get('arrival');
             const departure = params.get('departure');
-            const qty = parseInt(params.get('qty') || '1');
             
-            if(!type || !arrival || !departure) {
+            if(!combo || !arrival || !departure) {
                 window.location.href = '/';
                 return;
             }
+
+            const comboParts = combo.split(',').map(part => {
+                const [type, countStr] = part.split(':');
+                return { type, count: parseInt(countStr) };
+            });
 
             // Pre-fill user data
             document.getElementById('guest-name').value = guest.FirstName + ' ' + guest.LastName;
             document.getElementById('guest-email').value = guest.Email;
             
+            let roomInfoHtml = '';
+            comboParts.forEach(p => {
+                roomInfoHtml += `<strong style="color:white; font-size: 1.2rem;">${p.count} x ${p.type}</strong><br>`;
+            });
+
             // Format Summary visually
             document.getElementById('room-info').innerHTML = `
                 <div style="margin-bottom: 1rem;">
                     <span style="color:#888; font-size: 0.85rem;">Phòng yêu cầu</span><br>
-                    <strong style="color:white; font-size: 1.2rem;">${qty} x ${type}</strong>
+                    ${roomInfoHtml}
                 </div>
                 <div style="margin-bottom: 1rem;">
                     <span style="color:#888; font-size: 0.85rem;">Nhận phòng (Từ 14:00)</span><br>
@@ -146,20 +155,22 @@
 
                 try {
                     let successIds = [];
-                    for(let i=0; i<qty; i++) {
-                        const response = await fetch('/api/bookings', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                guestId: guest.GuestID, 
-                                roomType: type, 
-                                arrivalDate: arrival, 
-                                departureDate: departure 
-                            })
-                        });
-                        const data = await response.json();
-                        if(!response.ok) throw new Error(data.message);
-                        successIds.push(data.bookingId);
+                    for(let part of comboParts) {
+                        for(let i=0; i<part.count; i++) {
+                            const response = await fetch('/api/bookings', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    guestId: guest.GuestID, 
+                                    roomType: part.type, 
+                                    arrivalDate: arrival, 
+                                    departureDate: departure 
+                                })
+                            });
+                            const data = await response.json();
+                            if(!response.ok) throw new Error(data.message);
+                            successIds.push(data.bookingId);
+                        }
                     }
 
                     msg.style.color = '#4CAF50';

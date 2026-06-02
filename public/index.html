@@ -19,7 +19,7 @@
                 <li><a href="#rooms">Rooms</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
-                <li><a href="#" onclick="event.preventDefault();" id="login-nav-btn" class="btn btn-outline">Login</a></li>
+                <li><a href="/login.html" class="btn btn-outline">Login</a></li>
             </ul>
         </nav>
     </header>
@@ -29,12 +29,58 @@
             <h1>Experience Unmatched Elegance</h1>
             <p>Your perfect escape awaits in the heart of the city.</p>
         </div>
+        
+        <!-- JW Marriott style Booking Bar -->
+        <div class="booking-bar">
+            <form id="search-form" class="booking-form">
+                <div class="form-group">
+                    <label>NGÀY (1 ĐÊM)</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="date" id="search-arrival" required>
+                        <span style="color:#aaa;">→</span>
+                        <input type="date" id="search-departure" required>
+                    </div>
+                </div>
+                <div class="form-divider"></div>
+                <div class="form-group" style="position: relative;" id="guest-group">
+                    <label>PHÒNG & KHÁCH</label>
+                    <div id="guests-display" style="color:#fff; font-size:1rem; cursor:pointer;" onclick="toggleGuestPopover()">
+                        2 Khách
+                    </div>
+                    <div id="guests-popover" class="guests-popover" style="display:none;">
+                        <span class="close-popover" onclick="toggleGuestPopover()">×</span>
+                        <h4 style="margin-bottom: 1rem; color: #555; font-size: 0.8rem; text-transform: uppercase;">Số lượng khách</h4>
+                        <div class="counter-row">
+                            <div><strong>Người lớn</strong><br><small style="color:#888; font-size: 0.75rem;">(Tối đa: 16 người lớn)</small></div>
+                            <div class="counter">
+                                <button type="button" onclick="updateCount('adults', -1)">-</button>
+                                <span id="count-adults" style="color: black;">2</span>
+                                <button type="button" onclick="updateCount('adults', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="counter-row">
+                            <div><strong>Trẻ em</strong><br><small style="color:#888; font-size: 0.75rem;">(Dưới 12 tuổi)</small></div>
+                            <div class="counter">
+                                <button type="button" onclick="updateCount('children', -1)">-</button>
+                                <span id="count-children" style="color: black;">0</span>
+                                <button type="button" onclick="updateCount('children', 1)">+</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 1rem; padding: 0.5rem;" onclick="toggleGuestPopover()">OK</button>
+                    </div>
+                </div>
+                <div class="form-divider"></div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-search">Xem Mức Giá</button>
+                </div>
+            </form>
+        </div>
     </section>
 
     <section id="rooms" class="rooms-section">
         <div class="section-title">
-            <h2 id="room-section-title">Danh sách Hạng Phòng</h2>
-            <p id="room-section-desc">Khám phá không gian nghỉ dưỡng đỉnh cao tại khách sạn của chúng tôi.</p>
+            <h2 id="room-section-title">Phòng Đề Cử</h2>
+            <p id="room-section-desc">Vui lòng chọn ngày và số lượng khách để xem các gợi ý phòng tốt nhất.</p>
         </div>
         <div class="rooms-grid" id="rooms-container">
             <!-- Dynamically injected -->
@@ -50,16 +96,36 @@
                 <div class="modal-gallery">
                     <img id="modal-main-img" class="main-img" src="" alt="Main Room Image">
                     <div class="thumbnail-row">
-                        <div class="thumb active" onclick="changeImage(this, 'main')">Ảnh 1</div>
-                        <div class="thumb" onclick="changeImage(this, 'thumb')">Ảnh 2</div>
-                        <div class="thumb" onclick="changeImage(this, 'thumb')">Ảnh 3</div>
-                        <div class="thumb" onclick="changeImage(this, 'thumb')">Ảnh 4</div>
-                        <div class="thumb" onclick="changeImage(this, 'thumb')">Ảnh 5</div>
-                        <div class="thumb" onclick="changeImage(this, 'thumb')">Ảnh 6</div>
-                        <div class="thumb" onclick="changeImage(this, 'thumb')">Ảnh 7</div>
-                        <div class="thumb" onclick="changeImage(this, 'thumb')">Ảnh 8</div>
-                        <div class="thumb" onclick="changeImage(this, 'thumb')">Ảnh 9</div>
-                        <div class="thumb" onclick="changeImage(this, 'thumb')">Ảnh 10</div>
+                        <div class="thumb active" onclick="changeImage(this, 1)">
+                            <img id="thumb-img-1" src="" alt="Thumbnail 1">
+                        </div>
+                        <div class="thumb" onclick="changeImage(this, 2)">
+                            <img id="thumb-img-2" src="" alt="Thumbnail 2">
+                        </div>
+                        <div class="thumb" onclick="changeImage(this, 3)">
+                            <img id="thumb-img-3" src="" alt="Thumbnail 3">
+                        </div>
+                        <div class="thumb" onclick="changeImage(this, 4)">
+                            <img id="thumb-img-4" src="" alt="Thumbnail 4">
+                        </div>
+                        <div class="thumb" onclick="changeImage(this, 5)">
+                            <img id="thumb-img-5" src="" alt="Thumbnail 5">
+                        </div>
+                        <div class="thumb" onclick="changeImage(this, 6)">
+                            <img id="thumb-img-6" src="" alt="Thumbnail 6">
+                        </div>
+                        <div class="thumb" onclick="changeImage(this, 7)">
+                            <img id="thumb-img-7" src="" alt="Thumbnail 7">
+                        </div>
+                        <div class="thumb" onclick="changeImage(this, 8)">
+                            <img id="thumb-img-8" src="" alt="Thumbnail 8">
+                        </div>
+                        <div class="thumb" onclick="changeImage(this, 9)">
+                            <img id="thumb-img-9" src="" alt="Thumbnail 9">
+                        </div>
+                        <div class="thumb" onclick="changeImage(this, 10)">
+                            <img id="thumb-img-10" src="" alt="Thumbnail 10">
+                        </div>
                     </div>
                 </div>
                 <!-- Right: Details -->

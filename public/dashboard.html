@@ -39,6 +39,14 @@
         }
         .data-table th { background: rgba(0,0,0,0.2); color: var(--primary); font-weight: 600; }
         .data-table tr:hover { background: rgba(255,255,255,0.02); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--glass-bg); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border); text-align: center; }
+        .stat-card h3 { color: #ccc; font-size: 1rem; margin-bottom: 0.5rem; font-weight: 400; }
+        .stat-card .value { font-size: 2rem; color: var(--primary); font-weight: 700; }
+        .btn-action { padding: 0.4rem 0.8rem; border-radius: 6px; border: none; cursor: pointer; font-family: inherit; font-size: 0.85rem; margin-right: 0.5rem; margin-bottom: 0.5rem; }
+        .btn-checkin { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); }
+        .btn-checkout { background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.4); }
+        .btn-cancel { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); }
     </style>
 </head>
 <body>
@@ -53,6 +61,24 @@
                 <h2>All Bookings</h2>
                 <div id="staff-name" style="color:var(--primary)"></div>
             </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>This Month's Bookings</h3>
+                    <div class="value" id="stat-total">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Checked In</h3>
+                    <div class="value" id="stat-checkin">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Checked Out</h3>
+                    <div class="value" id="stat-checkout">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Cancellation Rate</h3>
+                    <div class="value" id="stat-rate">0%</div>
+                </div>
+            </div>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -61,10 +87,12 @@
                         <th>Room Type (No)</th>
                         <th>Arrival Date</th>
                         <th>Departure Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="bookings-tbody">
-                    <tr><td colspan="5" style="text-align:center">Loading...</td></tr>
+                    <tr><td colspan="7" style="text-align:center">Loading...</td></tr>
                 </tbody>
             </table>
         </main>
@@ -73,12 +101,47 @@
         document.addEventListener('DOMContentLoaded', () => {
             const emp = JSON.parse(localStorage.getItem('employee'));
             if (!emp) {
-                window.location.href = '/employee-login.html';
+                window.location.href = '/login.html';
                 return;
             }
             document.getElementById('staff-name').textContent = `Role: ${emp.RoleTitle} | ${emp.FirstName}`;
+            fetchStatistics();
             fetchBookings();
         });
+
+        async function fetchStatistics() {
+            try {
+                const res = await fetch('/api/bookings/statistics');
+                const stats = await res.json();
+                document.getElementById('stat-total').textContent = stats.TotalBookings;
+                document.getElementById('stat-checkin').textContent = stats.CheckedIn;
+                document.getElementById('stat-checkout').textContent = stats.CheckedOut;
+                document.getElementById('stat-rate').textContent = stats.CancellationRate + '%';
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function updateStatus(id, status) {
+            if (!confirm(`Are you sure you want to mark this booking as ${status}?`)) return;
+            try {
+                const res = await fetch(`/api/bookings/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                if (res.ok) {
+                    fetchStatistics();
+                    fetchBookings();
+                } else {
+                    const err = await res.json();
+                    alert(err.message || 'Failed to update status');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Network error');
+            }
+        }
 
         async function fetchBookings() {
             try {
@@ -88,13 +151,28 @@
                 tbody.innerHTML = '';
                 
                 if (bookings.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No bookings found.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">No bookings found.</td></tr>';
                     return;
                 }
 
                 bookings.forEach(b => {
                     const dr = new Date(b.ArrivalDate).toLocaleDateString();
                     const dp = new Date(b.DepartureDate).toLocaleDateString();
+                    let statusClass = '';
+                    const bStatus = b.BookingStatus || 'Pending';
+                    if (bStatus === 'CheckedIn') statusClass = 'color: #2ecc71;';
+                    else if (bStatus === 'CheckedOut') statusClass = 'color: #3498db;';
+                    else if (bStatus === 'Cancelled') statusClass = 'color: #e74c3c;';
+                    else statusClass = 'color: var(--primary);';
+
+                    let actions = '';
+                    if (bStatus === 'Pending' || bStatus === 'Confirmed') {
+                        actions += `<button class="btn-action btn-checkin" onclick="updateStatus(${b.BookingID}, 'CheckedIn')">Check In</button>`;
+                        actions += `<button class="btn-action btn-cancel" onclick="updateStatus(${b.BookingID}, 'Cancelled')">Cancel</button>`;
+                    } else if (bStatus === 'CheckedIn') {
+                        actions += `<button class="btn-action btn-checkout" onclick="updateStatus(${b.BookingID}, 'CheckedOut')">Check Out</button>`;
+                    }
+
                     tbody.innerHTML += `
                         <tr>
                             <td>#${b.BookingID}</td>
@@ -102,6 +180,8 @@
                             <td>${b.RoomType} (${b.RoomNo})</td>
                             <td>${dr}</td>
                             <td>${dp}</td>
+                            <td style="${statusClass} font-weight: 600;">${bStatus}</td>
+                            <td>${actions || '-'}</td>
                         </tr>
                     `;
                 });
@@ -112,7 +192,7 @@
 
         function logout() {
             localStorage.removeItem('employee');
-            window.location.href = '/employee-login.html';
+            window.location.href = '/login.html';
         }
     </script>
 </body>
