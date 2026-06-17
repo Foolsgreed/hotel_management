@@ -19,7 +19,7 @@
                 <li><a href="#rooms">Rooms</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
-                <li><a href="/login.html" class="btn btn-outline">Login</a></li>
+                <li><a href="/login.html" class="btn btn-outline" id="nav-login-btn">Login</a></li>
             </ul>
         </nav>
     </header>
@@ -34,7 +34,7 @@
         <div class="booking-bar">
             <form id="search-form" class="booking-form">
                 <div class="form-group">
-                    <label>NGÀY (1 ĐÊM)</label>
+                    <label>DATES (1 NIGHT)</label>
                     <div style="display:flex; gap:10px; align-items:center;">
                         <input type="date" id="search-arrival" required>
                         <span style="color:#aaa;">→</span>
@@ -43,15 +43,15 @@
                 </div>
                 <div class="form-divider"></div>
                 <div class="form-group" style="position: relative;" id="guest-group">
-                    <label>PHÒNG & KHÁCH</label>
+                    <label>ROOMS & GUESTS</label>
                     <div id="guests-display" style="color:#fff; font-size:1rem; cursor:pointer;" onclick="toggleGuestPopover()">
-                        2 Khách
+                        2 Guests
                     </div>
                     <div id="guests-popover" class="guests-popover" style="display:none;">
                         <span class="close-popover" onclick="toggleGuestPopover()">×</span>
-                        <h4 style="margin-bottom: 1rem; color: #555; font-size: 0.8rem; text-transform: uppercase;">Số lượng khách</h4>
+                        <h4 style="margin-bottom: 1rem; color: #555; font-size: 0.8rem; text-transform: uppercase;">Number of guests</h4>
                         <div class="counter-row">
-                            <div><strong>Người lớn</strong><br><small style="color:#888; font-size: 0.75rem;">(Tối đa: 16 người lớn)</small></div>
+                            <div><strong>Adults</strong><br><small style="color:#888; font-size: 0.75rem;">(Max: 16 adults)</small></div>
                             <div class="counter">
                                 <button type="button" onclick="updateCount('adults', -1)">-</button>
                                 <span id="count-adults" style="color: black;">2</span>
@@ -59,7 +59,7 @@
                             </div>
                         </div>
                         <div class="counter-row">
-                            <div><strong>Trẻ em</strong><br><small style="color:#888; font-size: 0.75rem;">(Dưới 12 tuổi)</small></div>
+                            <div><strong>Children</strong><br><small style="color:#888; font-size: 0.75rem;">(Under 12 years)</small></div>
                             <div class="counter">
                                 <button type="button" onclick="updateCount('children', -1)">-</button>
                                 <span id="count-children" style="color: black;">0</span>
@@ -71,7 +71,7 @@
                 </div>
                 <div class="form-divider"></div>
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary btn-search">Xem Mức Giá</button>
+                    <button type="submit" class="btn btn-primary btn-search">View Rates</button>
                 </div>
             </form>
         </div>
@@ -79,8 +79,8 @@
 
     <section id="rooms" class="rooms-section">
         <div class="section-title">
-            <h2 id="room-section-title">Phòng Đề Cử</h2>
-            <p id="room-section-desc">Vui lòng chọn ngày và số lượng khách để xem các gợi ý phòng tốt nhất.</p>
+            <h2 id="room-section-title">Recommended Rooms</h2>
+            <p id="room-section-desc">Please select your dates and guests to view the best room recommendations.</p>
         </div>
         <div class="rooms-grid" id="rooms-container">
             <!-- Dynamically injected -->
@@ -130,52 +130,112 @@
                 </div>
                 <!-- Right: Details -->
                 <div class="modal-details">
-                    <h2 id="modal-room-title">Phòng...</h2>
+                    <h2 id="modal-room-title">Room...</h2>
                     
                     <div class="tags-row">
-                        <span class="detail-tag">🛏️ Phòng</span>
+                        <span class="detail-tag">🛏️ Room</span>
                         <span class="detail-tag" id="modal-room-area">📐 27 m²</span>
-                        <span class="detail-tag">⛰️ Khung cảnh đẹp</span>
-                        <span class="detail-tag">❄️ Điều hòa không khí</span>
-                        <span class="detail-tag">🚿 Phòng tắm riêng</span>
-                        <span class="detail-tag">📺 TV màn hình phẳng</span>
+                        <span class="detail-tag">⛰️ Nice view</span>
+                        <span class="detail-tag">❄️ Air conditioning</span>
+                        <span class="detail-tag">🚿 Private bathroom</span>
+                        <span class="detail-tag">📺 Flat-screen TV</span>
                         <span class="detail-tag">🍷 Minibar</span>
-                        <span class="detail-tag">📶 WiFi miễn phí</span>
+                        <span class="detail-tag">📶 Free WiFi</span>
                     </div>
 
-                    <p style="margin: 0.5rem 0; font-size: 0.85rem;" id="modal-room-desc">Mô tả phòng...</p>
+                    <p style="margin: 0.5rem 0; font-size: 0.85rem;" id="modal-room-desc">Room description...</p>
 
-                    <h4 style="font-size: 0.95rem; margin-bottom: 0.2rem;">Trong phòng tắm riêng của bạn:</h4>
+                    <h4 style="font-size: 0.95rem; margin-bottom: 0.2rem;">In your private bathroom:</h4>
                     <div class="amenities-grid">
-                        <span>✓ Đồ vệ sinh cá nhân miễn phí</span>
-                        <span>✓ Bồn tắm hoặc Vòi sen</span>
-                        <span>✓ Chậu rửa vệ sinh</span>
-                        <span>✓ Dép</span>
-                        <span>✓ Máy sấy tóc</span>
-                        <span>✓ Giấy vệ sinh</span>
+                        <span>✓ Free toiletries</span>
+                        <span>✓ Bath or Shower</span>
+                        <span>✓ Bidet</span>
+                        <span>✓ Slippers</span>
+                        <span>✓ Hairdryer</span>
+                        <span>✓ Toilet paper</span>
                     </div>
 
-                    <h4 style="margin-top: 0.8rem; font-size: 0.95rem; margin-bottom: 0.2rem;">Tiện nghi phòng:</h4>
+                    <h4 style="margin-top: 0.8rem; font-size: 0.95rem; margin-bottom: 0.2rem;">Room facilities:</h4>
                     <div class="amenities-grid cols-2">
-                        <span>✓ Bàn làm việc</span>
+                        <span>✓ Desk</span>
                         <span>✓ TV</span>
-                        <span>✓ Thiết báo carbon</span>
-                        <span>✓ Tủ lạnh</span>
-                        <span>✓ TV màn hình phẳng</span>
+                        <span>✓ Carbon monoxide detector</span>
+                        <span>✓ Refrigerator</span>
+                        <span>✓ Flat-screen TV</span>
                         <span>✓ Minibar</span>
-                        <span>✓ Dịch vụ báo thức</span>
-                        <span>✓ Ấm đun nước điện</span>
-                        <span>✓ Đồng hồ báo thức</span>
-                        <span>✓ Điện thoại</span>
-                        <span>✓ Khăn tắm</span>
-                        <span>✓ Khu vực ăn uống</span>
+                        <span>✓ Wake-up service</span>
+                        <span>✓ Electric kettle</span>
+                        <span>✓ Alarm clock</span>
+                        <span>✓ Telephone</span>
+                        <span>✓ Towels</span>
+                        <span>✓ Dining area</span>
                     </div>
                     
-                    <p style="margin-top: 1.5rem;"><strong>Hút thuốc:</strong> Không hút thuốc</p>
+                    <p style="margin-top: 1.5rem;"><strong>Smoking:</strong> Non-smoking</p>
                 </div>
             </div>
         </div>
     </div>
+
+    <section id="about" style="padding: 100px 10%; min-height: 80vh; background: #1a1c23; color: white;">
+        <h1 style="font-size: 3.5rem; margin-bottom: 2rem; color: var(--primary); text-align: center;">About Us</h1>
+        <div style="display: flex; gap: 4rem; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+                <p style="font-size: 1.2rem; line-height: 1.8; color: #ddd; margin-bottom: 1.5rem;">
+                    Welcome to the Grand Palace Hotel - Where luxury and absolute comfort are celebrated.
+                </p>
+                <p style="font-size: 1.2rem; line-height: 1.8; color: #ddd; margin-bottom: 1.5rem;">
+                    Established in 2010, our hotel constantly strives to provide the highest class of accommodation. With over 200 exquisitely designed rooms, integrated modern technology, and perfect amenities, Grand Palace is the ideal destination for both business and leisure travelers.
+                </p>
+                <p style="font-size: 1.2rem; line-height: 1.8; color: #ddd;">
+                    Our dedicated and professional staff are always ready to serve you 24/7, ensuring that all your needs are fully met.
+                </p>
+            </div>
+            <div style="flex: 1; min-width: 300px; text-align: center;">
+                <img src="/images/deluxe.jpg" alt="About Us" style="width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" style="padding: 100px 10%; min-height: 80vh; background: #0f1115; color: white;">
+        <h1 style="font-size: 3.5rem; margin-bottom: 3rem; color: var(--primary); text-align: center;">Contact</h1>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4rem;">
+            <div style="background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 15px;">
+                <h3 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #fff;">Direct Information</h3>
+                <p style="font-size: 1.1rem; line-height: 2; color: #ccc;">📍 <strong>Address:</strong> 123 Ton Duc Thang St, District 1, HCMC</p>
+                <p style="font-size: 1.1rem; line-height: 2; color: #ccc;">📞 <strong>Phone:</strong> +84 123 456 789</p>
+                <p style="font-size: 1.1rem; line-height: 2; color: #ccc;">✉️ <strong>Email:</strong> info@grandpalace.com</p>
+            </div>
+            <div>
+                <h3 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #fff;">Send a Message</h3>
+                <form onsubmit="event.preventDefault(); alert('Message sent. We will respond as soon as possible!'); this.reset();">
+                    <div style="margin-bottom: 1.5rem;">
+                        <input type="text" placeholder="Your Name" style="width:100%; padding: 1rem; border-radius: 8px; border: 1px solid #444; background: #2a2c33; color: white; font-family: inherit; font-size: 1rem;" required>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <input type="email" placeholder="Email" style="width:100%; padding: 1rem; border-radius: 8px; border: 1px solid #444; background: #2a2c33; color: white; font-family: inherit; font-size: 1rem;" required>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <textarea placeholder="Your Message..." style="width:100%; padding: 1rem; border-radius: 8px; border: 1px solid #444; background: #2a2c33; color: white; min-height: 180px; font-family: inherit; font-size: 1rem;" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section id="reviews" class="reviews-section" style="padding: 5rem 10%; background: #1a1c23;">
+        <div class="section-title">
+            <h2 style="color: #fff; text-align: center; margin-bottom: 0.5rem; font-size: 2.5rem;">
+                What Our Guests Say
+                <span id="average-rating-display" style="font-size: 1.5rem; color: gold; margin-left: 10px;"></span>
+            </h2>
+            <p style="color: #aaa; text-align: center; margin-bottom: 3rem;">Real experiences from guests who have stayed at the Grand Palace.</p>
+        </div>
+        <div class="reviews-grid" id="reviews-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <!-- Injected by JS -->
+        </div>
+    </section>
 
     <footer>
         <p>&copy; 2026 Grand Palace. All rights reserved.</p>

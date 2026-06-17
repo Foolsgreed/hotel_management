@@ -112,9 +112,15 @@
                         <input type="text" id="lastName" required placeholder="Doe">
                     </div>
                 </div>
-                <div class="input-group">
-                    <label>Email Address</label>
-                    <input type="email" id="email" required placeholder="john@example.com">
+                <div class="row">
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="email" required placeholder="john@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phoneNo" placeholder="Enter phone number">
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>Password</label>
@@ -134,6 +140,7 @@
             const firstName = document.getElementById('firstName').value;
             const lastName = document.getElementById('lastName').value;
             const email = document.getElementById('email').value;
+            const phoneNo = document.getElementById('phoneNo').value;
             const password = document.getElementById('password').value;
             
             const btn = document.getElementById('reg-btn');
@@ -149,7 +156,7 @@
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ firstName, lastName, email, password })
+                    body: JSON.stringify({ firstName, lastName, email, password, phoneNo })
                 });
 
                 const data = await response.json();

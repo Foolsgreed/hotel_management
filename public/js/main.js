@@ -13,18 +13,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle auth state
     const guest = JSON.parse(localStorage.getItem('guest'));
-    const loginLink = document.querySelector('a[href="/login.html"]');
+    const loginLink = document.getElementById('nav-login-btn') || document.querySelector('a[href="/login.html"]');
     if (guest && loginLink) {
         loginLink.outerHTML = `
             <div style="display:flex; align-items:center; gap: 1rem;">
-                <span style="color:#fff; font-size:0.9rem;">Xin chào, <b>${guest.FirstName}</b></span>
-                <button onclick="localStorage.removeItem('guest'); window.location.reload();" class="btn btn-outline" style="padding: 0.5rem 1rem;">Đăng xuất</button>
+                <a href="/profile.html" style="color:#fff; font-size:0.9rem; text-decoration: none;">Hello, <b>${guest.FirstName}</b></a>
+                <button onclick="localStorage.removeItem('guest'); window.location.href='/index.html';" class="btn btn-outline" style="padding: 0.5rem 1rem;">Logout</button>
             </div>
         `;
     }
 
-    initSearchBar();
-    loadDefaultRooms();
+    if (document.getElementById('search-arrival')) {
+        initSearchBar();
+    }
+    if (document.getElementById('rooms-container')) {
+        loadDefaultRooms();
+    }
+    if (document.getElementById('reviews-container')) {
+        loadLatestReviews();
+    }
 });
 
 async function loadDefaultRooms() {
@@ -32,8 +39,8 @@ async function loadDefaultRooms() {
     const title = document.getElementById('room-section-title');
     const desc = document.getElementById('room-section-desc');
 
-    title.textContent = 'Danh sách Hạng Phòng';
-    desc.textContent = 'Khám phá không gian nghỉ dưỡng đỉnh cao tại khách sạn của chúng tôi.';
+    title.textContent = 'Room Categories';
+    desc.textContent = 'Discover the ultimate relaxation space at our hotel.';
 
     try {
         const response = await fetch('/api/rooms');
@@ -55,17 +62,17 @@ async function loadDefaultRooms() {
             card.innerHTML = `
                 <div class="room-img-wrapper" style="cursor:pointer;" onclick="openRoomModal('${rec.RoomType}', '${rec.RoomDesc}', '${rec.RoomImg}', ${rec.Occupancy})">
                     <img src="/images/${rec.RoomImg}" alt="${rec.RoomType}" onerror="this.src='/images/standard.jpg'">
-                    <div class="room-price-tag">$${rec.RoomPrice} / đêm</div>
+                    <div class="room-price-tag">$${rec.RoomPrice} / night</div>
                 </div>
                 <div class="room-info">
                     <h3 style="cursor:pointer;" onclick="openRoomModal('${rec.RoomType}', '${rec.RoomDesc}', '${rec.RoomImg}', ${rec.Occupancy})">${rec.RoomType}</h3>
                     <p style="color:var(--primary); font-weight:600; font-size:0.9rem; margin-bottom: 0.5rem;">
-                        Sức chứa tối đa: ${rec.Occupancy} khách
+                        Max capacity: ${rec.Occupancy} guests
                     </p>
                     <p>${rec.RoomDesc}</p>
                     <div class="room-meta">
                         <button class="btn btn-outline" style="width: 100%" onclick="document.getElementById('search-arrival').focus(); window.scrollTo({top: 0, behavior: 'smooth'});">
-                            Nhập ngày để đặt
+                            Enter dates to book
                         </button>
                     </div>
                 </div>
@@ -75,7 +82,7 @@ async function loadDefaultRooms() {
 
     } catch (e) {
         console.error(e);
-        container.innerHTML = '<p style="color:red">Lỗi tải dữ liệu phòng mặc định.</p>';
+        container.innerHTML = '<p style="color:red">Error loading default room data.</p>';
     }
 }
 
@@ -130,7 +137,7 @@ function updateCount(type, change) {
 
     // Update Display Text
     const totalKhach = window.guestCounts.adults + window.guestCounts.children;
-    document.getElementById('guests-display').textContent = `${totalKhach} Khách`;
+    document.getElementById('guests-display').textContent = `${totalKhach} Guests`;
 }
 
 async function searchRooms(arrivalDate, departureDate, guests) {
@@ -138,8 +145,8 @@ async function searchRooms(arrivalDate, departureDate, guests) {
     const title = document.getElementById('room-section-title');
     const desc = document.getElementById('room-section-desc');
 
-    container.innerHTML = '<div class="loading-spinner">Mô phỏng hệ thống gợi ý phòng...</div>';
-    title.textContent = 'Đang tìm kiếm...';
+    container.innerHTML = '<div class="loading-spinner">Simulating room recommendation system...</div>';
+    title.textContent = 'Searching...';
     desc.textContent = '';
 
     // Smooth scroll to results
@@ -156,11 +163,11 @@ async function searchRooms(arrivalDate, departureDate, guests) {
         const recommendations = await response.json();
 
         container.innerHTML = '';
-        title.textContent = 'Phòng Đề Cử';
-        desc.textContent = `Các phương án tối ưu nhất dành cho ${guests} khách (${arrivalDate} → ${departureDate})`;
+        title.textContent = 'Recommended Rooms';
+        desc.textContent = `Optimal options for ${guests} guests (${arrivalDate} → ${departureDate})`;
 
         if (recommendations.length === 0) {
-            container.innerHTML = '<p style="text-align:center;width:100%;color:#a0a0a0;font-size:1.2rem;">Rất tiếc! Không còn phòng trống cho số lượng khách và thời gian bạn chọn.</p>';
+            container.innerHTML = '<p style="text-align:center;width:100%;color:#a0a0a0;font-size:1.2rem;">Sorry! No rooms available for the selected dates and guests.</p>';
             return;
         }
 
@@ -171,21 +178,21 @@ async function searchRooms(arrivalDate, departureDate, guests) {
             card.innerHTML = `
                 <div class="room-img-wrapper" style="cursor:pointer;" onclick="openRoomModal('${rec.comboName}', '${rec.RoomDesc}', '${rec.RoomImg}', ${rec.Occupancy})">
                     <img src="/images/${rec.RoomImg}" alt="${rec.comboName}" onerror="this.src='/images/deluxe.jpg'">
-                    <div class="room-price-tag">$${rec.totalPrice} / đêm</div>
+                    <div class="room-price-tag">$${rec.totalPrice} / night</div>
                 </div>
                 <div class="room-info">
                     <h3 style="cursor:pointer;" onclick="openRoomModal('${rec.comboName}', '${rec.RoomDesc}', '${rec.RoomImg}', ${rec.Occupancy})">${rec.comboName}</h3>
                     <p style="color:var(--primary); font-weight:600; font-size:0.9rem; margin-bottom: 0.5rem;">
-                        Tối đa: ${rec.Occupancy} khách
+                        Max: ${rec.Occupancy} guests
                     </p>
                     <p>${rec.RoomDesc}</p>
                     <div class="room-meta">
                         <span class="meta-item">
-                            <span style="color:#4CAF50">✓ Đủ phòng trống</span>
+                            <span style="color:#4CAF50">✓ Rooms available</span>
                         </span>
                         <button class="btn btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;" 
                             onclick="bookRoom('${rec.comboString}', '${arrivalDate}', '${departureDate}')">
-                            Đặt Gói Này
+                            Book This Option
                         </button>
                     </div>
                 </div>
@@ -195,14 +202,14 @@ async function searchRooms(arrivalDate, departureDate, guests) {
 
     } catch (error) {
         console.error('Error fetching search results:', error);
-        container.innerHTML = '<p style="text-align:center;width:100%;color:red">Lỗi tải dữ liệu. Vui lòng thử lại.</p>';
+        container.innerHTML = '<p style="text-align:center;width:100%;color:red">Error loading data. Please try again.</p>';
     }
 }
 
 function bookRoom(comboString, arrival, departure) {
     const guest = JSON.parse(localStorage.getItem('guest'));
     if (!guest) {
-        alert('Vui lòng đăng nhập để tiến hành đặt phòng!');
+        alert('Please login to proceed with booking!');
         window.location.href = '/login.html';
     } else {
         window.location.href = `/book.html?combo=${encodeURIComponent(comboString)}&arrival=${arrival}&departure=${departure}`;
@@ -255,5 +262,60 @@ function changeImage(element, index) {
     // Update main image source
     if (window.currentGalleryFolder) {
         document.getElementById('modal-main-img').src = `/images/${window.currentGalleryFolder}/${index}.jpg`;
+    }
+}
+
+async function loadLatestReviews() {
+    const container = document.getElementById('reviews-container');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/reviews/latest?limit=6');
+        if (!res.ok) throw new Error('Failed to fetch reviews');
+        const reviews = await res.json();
+        
+        try {
+            const avgRes = await fetch('/api/reviews/average');
+            if (avgRes.ok) {
+                const avgData = await avgRes.json();
+                const avgDisplay = document.getElementById('average-rating-display');
+                if (avgDisplay && avgData.AvgRating) {
+                    avgDisplay.textContent = `(${avgData.AvgRating} ★)`;
+                }
+            }
+        } catch (err) {
+            console.error('Error getting average rating', err);
+        }
+
+        container.innerHTML = '';
+        if (reviews.length === 0) {
+            container.innerHTML = '<p style="color:#888; text-align:center; width:100%;">No reviews yet.</p>';
+            return;
+        }
+
+        reviews.forEach(review => {
+            const stars = '★'.repeat(review.Rating) + '☆'.repeat(5 - review.Rating);
+            const date = new Date(review.ReviewDate).toLocaleDateString('en-US');
+            
+            const card = document.createElement('div');
+            card.className = 'review-card';
+            card.style.background = 'rgba(255,255,255,0.05)';
+            card.style.padding = '1.5rem';
+            card.style.borderRadius = '10px';
+            card.style.border = '1px solid rgba(255,255,255,0.1)';
+            
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h4 style="color: #fff; margin: 0;">${review.FirstName} ${review.LastName}</h4>
+                    <span style="color: #ffd700; font-size: 1.2rem;">${stars}</span>
+                </div>
+                <p style="color: #ccc; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;">"${review.Comment}"</p>
+                <div style="color: #888; font-size: 0.8rem; text-align: right;">Posted on: ${date}</div>
+            `;
+            container.appendChild(card);
+        });
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="color:red; text-align:center; width:100%;">Error loading reviews.</p>';
     }
 }
