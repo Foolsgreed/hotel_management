@@ -18,10 +18,14 @@ app.use(express.static(path.join(__dirname, '../public')));
 const roomRoutes = require('./routes/roomRoutes');
 const authRoutes = require('./routes/authRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const billRoutes = require('./routes/billRoutes');
 
 app.use('/api/rooms', roomRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/bills', billRoutes);
 
 app.get('/test-db', async (req, res) => {
     try {
@@ -32,6 +36,8 @@ app.get('/test-db', async (req, res) => {
         res.status(500).send(err.message);
     }
 });
+
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

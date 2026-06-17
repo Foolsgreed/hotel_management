@@ -111,6 +111,112 @@ class BookingModel {
             throw error;
         }
     }
+
+    static async createBookingOrder(guestID, comboParts, arrivalDate, departureDate) {
+        try {
+            const pool = await poolPromise;
+            const transaction = pool.transaction();
+            await transaction.begin();
+
+            try {
+                // 1. Create Bill immediately to get InvoiceNo
+                const billResult = await transaction.request()
+                    .input('GuestID', guestID)
+                    .query(`
+                        INSERT INTO Bill (GuestID, TotalAmount, PaymentStatus)
+                        OUTPUT INSERTED.InvoiceNo
+                        VALUES (@GuestID, 0, 'Unpaid')
+                    `);
+                const invoiceNo = billResult.recordset[0].InvoiceNo;
+
+                // 2. Iterate and create bookings for each room requested
+                for (let part of comboParts) {
+                    for (let i = 0; i < part.count; i++) {
+                        const roomQuery = await transaction.request()
+                            .input('RoomType', part.type)
+                            .input('ArrivalDate', arrivalDate)
+                            .input('DepartureDate', departureDate)
+                            .query(`
+                                SELECT TOP 1 RoomNo, HotelCode 
+                                FROM Room 
+                                WHERE RoomType = @RoomType
+                                AND RoomNo NOT IN (
+                                    SELECT RoomNo FROM Booking 
+                                    WHERE ArrivalDate < @DepartureDate AND DepartureDate > @ArrivalDate
+                                      AND BookingStatus != 'Cancelled'
+                                )
+                            `);
+
+                        if (roomQuery.recordset.length === 0) {
+                            throw new Error(`Not enough ${part.type} rooms available.`);
+                        }
+
+                        const roomNo = roomQuery.recordset[0].RoomNo;
+                        const hotelCode = roomQuery.recordset[0].HotelCode;
+
+                        await transaction.request()
+                            .input('HotelCode', hotelCode)
+                            .input('GuestID', guestID)
+                            .input('RoomNo', roomNo)
+                            .input('InvoiceNo', invoiceNo)
+                            .input('BookingDate', new Date())
+                            .input('ArrivalDate', arrivalDate)
+                            .input('DepartureDate', departureDate)
+                            .query(`
+                                INSERT INTO Booking (HotelCode, GuestID, RoomNo, InvoiceNo, BookingDate, ArrivalDate, DepartureDate, BookingStatus)
+                                VALUES (@HotelCode, @GuestID, @RoomNo, @InvoiceNo, @BookingDate, @ArrivalDate, @DepartureDate, 'Pending')
+                            `);
+                    }
+                }
+
+                await transaction.commit();
+                return invoiceNo;
+            } catch (err) {
+                await transaction.rollback();
+                throw err;
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getBookingsByGuest(guestId) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request()
+                .input('GuestID', guestId)
+                .query(`
+                    SELECT b.BookingID, b.RoomNo, r.RoomType, b.ArrivalDate, b.DepartureDate, b.BookingStatus, b.BookingDate, b.InvoiceNo, bill.PaymentStatus, bill.TotalAmount
+                    FROM Booking b
+                    INNER JOIN Room r ON b.RoomNo = r.RoomNo
+                    LEFT JOIN Bill bill ON b.InvoiceNo = bill.InvoiceNo
+                    WHERE b.GuestID = @GuestID
+                    ORDER BY b.ArrivalDate DESC, b.BookingID DESC
+                `);
+            return result.recordset;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async cancelBooking(bookingId, guestId) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request()
+                .input('BookingID', bookingId)
+                .input('GuestID', guestId)
+                .query(`
+                    UPDATE Booking
+                    SET BookingStatus = 'Cancelled'
+                    WHERE BookingID = @BookingID 
+                      AND GuestID = @GuestID 
+                      AND (BookingStatus IS NULL OR (BookingStatus NOT IN ('Cancelled', 'CheckedIn', 'CheckedOut')))
+                `);
+            return result.rowsAffected[0] > 0;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = BookingModel;

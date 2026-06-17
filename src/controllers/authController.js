@@ -3,12 +3,12 @@ const EmployeeModel = require('../models/employeeModel');
 
 exports.register = async (req, res) => {
     try {
-        const { firstName, lastName, email, password } = req.body;
+        const { firstName, lastName, email, password, phoneNo } = req.body;
         if (!firstName || !lastName || !email || !password) {
             return res.status(400).json({ message: 'All fields are required' });
         }
         
-        const guest = await GuestModel.register(firstName, lastName, email, password);
+        const guest = await GuestModel.register(firstName, lastName, email, password, phoneNo);
         res.status(201).json({ message: 'Registration successful', guest });
     } catch (error) {
         if (error.message === 'Email already exists') {
@@ -42,6 +42,21 @@ exports.login = async (req, res) => {
         res.status(401).json({ message: 'Invalid credentials' });
     } catch (error) {
         console.error("Login Error:", error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+exports.updateProfile = async (req, res) => {
+    try {
+        const { guestId, ...data } = req.body;
+        if (!guestId) {
+            return res.status(400).json({ message: 'Guest ID is required' });
+        }
+        
+        const updatedGuest = await GuestModel.updateGuest(guestId, data);
+        res.status(200).json({ message: 'Profile updated successfully', user: updatedGuest });
+    } catch (error) {
+        console.error("Update Profile Error:", error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
