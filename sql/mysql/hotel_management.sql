@@ -73,12 +73,31 @@ CREATE TABLE Guest (
     Country NVARCHAR(100)
 );
 
--- 7. Table Booking
+-- 7. Table Bill
+CREATE TABLE Bill (
+    InvoiceNo INT PRIMARY KEY IDENTITY(1,1),
+    GuestID INT FOREIGN KEY REFERENCES Guest(GuestID),
+    TotalAmount DECIMAL(18, 2),
+    RoomService DECIMAL(18, 2),
+    RestaurantCharges DECIMAL(18, 2),
+    BarCharges DECIMAL(18, 2),
+    MiscCharges DECIMAL(18, 2),
+    IfLateCheckout BIT,  -- Cờ đánh dấu trả phòng trễ (0 hoặc 1)
+    PaymentDate DATE,
+    PaymentMode VARCHAR(50),
+    PaymentStatus VARCHAR(50),
+    CreditCardNo VARCHAR(50),
+    ExpireDate DATE,
+    ChequeNo VARCHAR(50)
+);
+
+-- 8. Table Booking
 CREATE TABLE Booking (
     BookingID INT PRIMARY KEY IDENTITY(1,1),
     HotelCode INT FOREIGN KEY REFERENCES Hotel(HotelCode),
     GuestID INT FOREIGN KEY REFERENCES Guest(GuestID),
     RoomNo VARCHAR(50) FOREIGN KEY REFERENCES Room(RoomNo),
+    InvoiceNo INT FOREIGN KEY REFERENCES Bill(InvoiceNo),
     BookingDate DATE,
     BookingTime TIME,
     ArrivalDate DATE,
@@ -91,21 +110,12 @@ CREATE TABLE Booking (
     BookingStatus VARCHAR(50)
 );
 
--- 8. Table Bill
-CREATE TABLE Bill (
-    InvoiceNo INT PRIMARY KEY IDENTITY(1,1),
-    BookingID INT FOREIGN KEY REFERENCES Booking(BookingID),
+-- 9. Table Review
+CREATE TABLE Review (
+    ReviewID INT PRIMARY KEY IDENTITY(1,1),
     GuestID INT FOREIGN KEY REFERENCES Guest(GuestID),
-    RoomCharge DECIMAL(18, 2),
-    RoomService DECIMAL(18, 2),
-    RestaurantCharges DECIMAL(18, 2),
-    BarCharges DECIMAL(18, 2),
-    MiscCharges DECIMAL(18, 2),
-    IfLateCheckout BIT,  -- Cờ đánh dấu trả phòng trễ (0 hoặc 1)
-    PaymentDate DATE,
-    PaymentMode VARCHAR(50),
-    PaymentStatus VARCHAR(50),
-    CreditCardNo VARCHAR(50),
-    ExpireDate DATE,
-    ChequeNo VARCHAR(50)
+    InvoiceNo INT FOREIGN KEY REFERENCES Bill(InvoiceNo),
+    Rating INT CHECK (Rating >= 1 AND Rating <= 5),
+    Comment NVARCHAR(MAX),
+    ReviewDate DATE DEFAULT GETDATE()
 );
