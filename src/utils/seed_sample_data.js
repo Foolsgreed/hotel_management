@@ -40,11 +40,7 @@ async function seedSampleData() {
             )
         `);
 
-        const rooms = await pool.request().query(`
-            SELECT RoomNo, HotelCode
-            FROM Room
-            ORDER BY RoomNo
-        `);
+        const rooms = await pool.request().query(`SELECT RoomNo, HotelCode FROM Room ORDER BY CAST(RoomNo AS INT)`);
 
         if (guests.recordset.length === 0) {
             console.log("⚠️ No guests found.");

@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const bookingController = require('../controllers/bookingController');
+const checkPermission = require('../middleware/checkPermission');
 
 // GET /api/bookings (Staff only ideally)
-router.get('/', bookingController.getAllBookings);
+router.get('/', checkPermission('view_bookings'), bookingController.getAllBookings);
 
 // POST /api/bookings/order (Batch booking)
 router.post('/order', bookingController.createBookingOrder);
@@ -12,10 +13,10 @@ router.post('/order', bookingController.createBookingOrder);
 router.post('/', bookingController.createBooking);
 
 // PUT /api/bookings/:id/status
-router.put('/:id/status', bookingController.updateBookingStatus);
+router.put('/:id/status', checkPermission('manage_bookings'), bookingController.updateBookingStatus);
 
 // GET /api/bookings/statistics
-router.get('/statistics', bookingController.getBookingStatistics);
+router.get('/statistics', checkPermission('view_statistics'), bookingController.getBookingStatistics);
 
 // GET /api/bookings/guest/:guestId
 router.get('/guest/:guestId', bookingController.getBookingsByGuest);

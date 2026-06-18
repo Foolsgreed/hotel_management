@@ -61,6 +61,29 @@ class BillModel {
             throw error;
         }
     }
+    static async getAllBills() {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request().query(`
+                SELECT 
+                    b.InvoiceNo,
+                    g.FirstName + ' ' + g.LastName AS GuestName,
+                    b.TotalAmount,
+                    b.PaymentDate,
+                    b.PaymentMode,
+                    b.PaymentStatus,
+                    STRING_AGG(bk.RoomNo, ', ') as RoomNo
+                FROM Bill b
+                INNER JOIN Guest g ON b.GuestID = g.GuestID
+                LEFT JOIN Booking bk ON b.InvoiceNo = bk.InvoiceNo
+                GROUP BY b.InvoiceNo, g.FirstName, g.LastName, b.TotalAmount, b.PaymentDate, b.PaymentMode, b.PaymentStatus
+                ORDER BY b.InvoiceNo DESC
+            `);
+            return result.recordset;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = BillModel;

@@ -9,9 +9,10 @@ async function setupSmartRooms() {
 
         try {
             console.log("Cleaning up old bookings and rooms...");
-            await transaction.request().query('DELETE FROM Bill');
+            await transaction.request().query('DELETE FROM Review');
             await transaction.request().query('ALTER TABLE Guest NOCHECK CONSTRAINT ALL');
             await transaction.request().query('DELETE FROM Booking');
+            await transaction.request().query('DELETE FROM Bill');
             await transaction.request().query('ALTER TABLE Guest CHECK CONSTRAINT ALL');
             await transaction.request().query('DELETE FROM Room');
 

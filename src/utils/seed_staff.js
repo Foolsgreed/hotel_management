@@ -23,6 +23,7 @@ async function seedStaff() {
             { firstName: 'Tuan', lastName: 'Nguyen', dob: '1991-04-30', gender: 'Male', phone: '0900000006', email: 'maintenance@grandpalace.com', password: 'maintenance123', salary: 1600.00, role: 'Maintenance' },
             { firstName: 'Anh', lastName: 'Dang', dob: '1993-02-14', gender: 'Female', phone: '0900000007', email: 'concierge@grandpalace.com', password: 'concierge123', salary: 1700.00, role: 'Concierge' },
             { firstName: 'Khanh', lastName: 'Bui', dob: '1996-08-09', gender: 'Male', phone: '0900000008', email: 'bartender@grandpalace.com', password: 'bartender123', salary: 1400.00, role: 'Bartender' },
+            { firstName: 'Phuong', lastName: 'Hoang', dob: '1994-06-25', gender: 'Female', phone: '0900000009', email: 'cashier@grandpalace.com', password: 'cashier123', salary: 1400.00, role: 'Cashier' },
         ];
 
         for (const s of staff) {

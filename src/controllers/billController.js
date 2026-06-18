@@ -30,3 +30,13 @@ exports.payInvoice = async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+exports.getAllBills = async (req, res) => {
+    try {
+        const bills = await BillModel.getAllBills();
+        res.status(200).json(bills);
+    } catch (error) {
+        console.error("Error fetching all bills:", error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};

@@ -98,6 +98,35 @@ class RoomModel {
             throw error;
         }
     }
+     static async getAllRoomsWithStatus() {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request().query(`
+                SELECT r.RoomNo, r.RoomType, r.Occupancy, r.FloorNo, r.RoomStatus, rt.RoomPrice
+                FROM Room r
+                INNER JOIN RoomType rt ON r.RoomType = rt.RoomType
+                ORDER BY r.FloorNo, r.RoomNo
+            `);
+            return result.recordset;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateRoomStatus(roomNo, status) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request()
+                .input('RoomNo', roomNo)
+                .input('Status', status)
+                .query(`
+                    UPDATE Room SET RoomStatus = @Status WHERE RoomNo = @RoomNo
+                `);
+            return result.rowsAffected[0] > 0;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = RoomModel;
