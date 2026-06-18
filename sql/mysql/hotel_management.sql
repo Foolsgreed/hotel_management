@@ -1,3 +1,4 @@
+-- BẮT BUỘC: Sử dụng database vừa tạo để chạy các lệnh bên dưới
 USE hotel_management;
 GO
 
@@ -25,7 +26,6 @@ CREATE TABLE Hotel (
 CREATE TABLE RoomType (
     RoomType VARCHAR(50) PRIMARY KEY,
     RoomPrice DECIMAL(18, 2) NOT NULL,
-    DefaultRoomPrice DECIMAL(18, 2),
     RoomImg VARCHAR(255),
     RoomDesc NVARCHAR(MAX)
 );
@@ -58,7 +58,6 @@ CREATE TABLE Employee (
 -- 6. Table Guest
 CREATE TABLE Guest (
     GuestID INT PRIMARY KEY IDENTITY(1,1),
-    GuestTitle NVARCHAR(20),
     FirstName NVARCHAR(100) NOT NULL,
     LastName NVARCHAR(100) NOT NULL,
     DOB DATE,
@@ -67,10 +66,6 @@ CREATE TABLE Guest (
     Email VARCHAR(100),
     Password VARCHAR(255) NOT NULL,
     PassportNo VARCHAR(50),
-    Address NVARCHAR(255),
-    Postcode VARCHAR(50),
-    City NVARCHAR(100),
-    Country NVARCHAR(100)
 );
 
 -- 7. Table Bill
@@ -79,16 +74,10 @@ CREATE TABLE Bill (
     GuestID INT FOREIGN KEY REFERENCES Guest(GuestID),
     TotalAmount DECIMAL(18, 2),
     RoomService DECIMAL(18, 2),
-    RestaurantCharges DECIMAL(18, 2),
-    BarCharges DECIMAL(18, 2),
-    MiscCharges DECIMAL(18, 2),
     IfLateCheckout BIT,  -- Cờ đánh dấu trả phòng trễ (0 hoặc 1)
     PaymentDate DATE,
     PaymentMode VARCHAR(50),
     PaymentStatus VARCHAR(50),
-    CreditCardNo VARCHAR(50),
-    ExpireDate DATE,
-    ChequeNo VARCHAR(50)
 );
 
 -- 8. Table Booking
@@ -102,8 +91,6 @@ CREATE TABLE Booking (
     BookingTime TIME,
     ArrivalDate DATE,
     DepartureDate DATE,
-    EstArrivalTime TIME,
-    EstDepartureTime TIME,
     NumAdults INT,
     NumChildren INT,
     SpecialReq NVARCHAR(MAX),

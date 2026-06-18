@@ -1,5 +1,7 @@
 const { poolPromise } = require('../config/db');
 
+const bcrypt = require('bcryptjs');
+
 class GuestModel {
     static async register(firstName, lastName, email, password, phoneNo = '') {
         try {
@@ -13,13 +15,14 @@ class GuestModel {
                 throw new Error('Email already exists');
             }
 
-            // Insert new guest. Normally password should be hashed with bcrypt!
-            // Storing plain text for simplicity per constraints unless requested otherwise.
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
             const result = await pool.request()
                 .input('FirstName', firstName)
                 .input('LastName', lastName)
                 .input('Email', email)
-                .input('Password', password)
+                .input('Password', hashedPassword)
                 .input('PhoneNo', phoneNo)
                 .query(`
                     INSERT INTO Guest (FirstName, LastName, Email, Password, PhoneNo)
@@ -38,13 +41,18 @@ class GuestModel {
             const pool = await poolPromise;
             const result = await pool.request()
                 .input('Email', email)
-                .input('Password', password)
-                .query('SELECT GuestID, FirstName, LastName, Email, PhoneNo, DOB, Gender, PassportNo FROM Guest WHERE Email = @Email AND Password = @Password');
+                .query('SELECT GuestID, FirstName, LastName, Email, Password, PhoneNo, DOB, Gender, PassportNo FROM Guest WHERE Email = @Email');
             
             if (result.recordset.length === 0) {
                 return null;
             }
-            return result.recordset[0];
+            
+            const guest = result.recordset[0];
+            const isValid = await bcrypt.compare(password, guest.Password);
+            if (!isValid) return null;
+
+            delete guest.Password;
+            return guest;
         } catch (error) {
             throw error;
         }

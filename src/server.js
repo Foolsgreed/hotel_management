@@ -9,12 +9,9 @@ const { poolPromise } = require('./config/db');
 app.use(express.json()); // Để đọc được dữ liệu JSON gửi lên
 app.use(express.urlencoded({ extended: true }));
 
-// Phục vụ các file tĩnh trong thư mục public (RẤT QUAN TRỌNG: Giữ để team xem được UI)
+// Phục vụ các file tĩnh trong thư mục public 
 app.use(express.static(path.join(__dirname, '../public')));
 
-// ==============================================================================
-// TODO: VAI TRÒ 2 (BACKEND) SẼ KHÔI PHỤC (UNCOMMENT) VÀ VIẾT TIẾP CODE Ở KHU VỰC NÀY
-// ==============================================================================
 const roomRoutes = require('./routes/roomRoutes');
 const authRoutes = require('./routes/authRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');

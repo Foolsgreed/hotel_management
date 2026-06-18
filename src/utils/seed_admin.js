@@ -22,14 +22,19 @@ async function seedAdmin() {
         }
 
         if (hotelCode && roleID) {
+            const bcrypt = require('bcryptjs');
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash('admin123', salt);
+
             await pool.request()
                 .input('HotelCode', hotelCode)
                 .input('RoleID', roleID)
+                .input('Password', hashedPassword)
                 .query(`
                 IF NOT EXISTS (SELECT * FROM Employee WHERE Email = 'admin@grandpalace.com')
                 BEGIN
                     INSERT INTO Employee (HotelCode, RoleID, FirstName, LastName, Email, Password, Salary) 
-                    VALUES (@HotelCode, @RoleID, 'System', 'Admin', 'admin@grandpalace.com', 'admin123', 5000)
+                    VALUES (@HotelCode, @RoleID, 'System', 'Admin', 'admin@grandpalace.com', @Password, 5000)
                 END
             `);
             console.log("✅ Admin Employee seeded Successfully: admin@grandpalace.com / admin123");
