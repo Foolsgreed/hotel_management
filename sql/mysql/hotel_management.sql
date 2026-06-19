@@ -2,6 +2,20 @@
 USE hotel_management;
 GO
 
+-- Drop in reverse dependency order to respect foreign keys
+IF OBJECT_ID('Review', 'U') IS NOT NULL DROP TABLE Review;
+IF OBJECT_ID('RolePermission', 'U') IS NOT NULL DROP TABLE RolePermission;
+IF OBJECT_ID('Booking', 'U') IS NOT NULL DROP TABLE Booking;
+IF OBJECT_ID('Bill', 'U') IS NOT NULL DROP TABLE Bill;
+IF OBJECT_ID('Guest', 'U') IS NOT NULL DROP TABLE Guest;
+IF OBJECT_ID('Employee', 'U') IS NOT NULL DROP TABLE Employee;
+IF OBJECT_ID('Room', 'U') IS NOT NULL DROP TABLE Room;
+IF OBJECT_ID('RoomType', 'U') IS NOT NULL DROP TABLE RoomType;
+IF OBJECT_ID('Hotel', 'U') IS NOT NULL DROP TABLE Hotel;
+IF OBJECT_ID('Permission', 'U') IS NOT NULL DROP TABLE Permission;
+IF OBJECT_ID('Role', 'U') IS NOT NULL DROP TABLE Role;
+GO
+
 -- 1. Table Role
 CREATE TABLE Role (
     RoleID INT PRIMARY KEY IDENTITY(1,1),
@@ -106,3 +120,21 @@ CREATE TABLE Review (
     Comment NVARCHAR(MAX),
     ReviewDate DATE DEFAULT GETDATE()
 );
+
+-- 10. Table Permission
+CREATE TABLE Permission (
+    PermissionID INT IDENTITY(1,1) PRIMARY KEY,
+    PermissionKey VARCHAR(50) NOT NULL UNIQUE,
+    PermissionDesc NVARCHAR(255)
+);
+GO
+
+-- 11. Table RolePermission
+CREATE TABLE RolePermission (
+    RoleID INT NOT NULL,
+    PermissionID INT NOT NULL,
+    PRIMARY KEY (RoleID, PermissionID),
+    FOREIGN KEY (RoleID) REFERENCES Role(RoleID),
+    FOREIGN KEY (PermissionID) REFERENCES Permission(PermissionID)
+);
+GO
