@@ -12,13 +12,13 @@ exports.getAllBookings = async (req, res) => {
 
 exports.createBookingOrder = async (req, res) => {
     try {
-        const { guestId, comboParts, arrivalDate, departureDate } = req.body;
+        const { guestId, comboParts, arrivalDate, departureDate, numAdults, numChildren, specialReq } = req.body;
         
         if (!guestId || !comboParts || !arrivalDate || !departureDate) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        const invoiceNo = await BookingModel.createBookingOrder(guestId, comboParts, arrivalDate, departureDate);
+        const invoiceNo = await BookingModel.createBookingOrder(guestId, comboParts, arrivalDate, departureDate, numAdults, numChildren, specialReq);
         res.status(201).json({ message: 'Booking order created successfully', invoiceNo: invoiceNo });
     } catch (error) {
         console.error("Error creating booking order:", error);

@@ -13,13 +13,13 @@ exports.getBillsByGuest = async (req, res) => {
 exports.payInvoice = async (req, res) => {
     try {
         const invoiceNo = req.params.invoiceNo;
-        const guestId = req.body.guestId;
+        const paymentMode = req.body.paymentMode || 'Credit Card';
 
-        if (!invoiceNo || !guestId) {
-            return res.status(400).json({ message: 'Missing invoiceNo or guestId' });
+        if (!invoiceNo) {
+            return res.status(400).json({ message: 'Missing invoiceNo' });
         }
 
-        const result = await BillModel.payInvoice(invoiceNo, guestId);
+        const result = await BillModel.payInvoice(invoiceNo, paymentMode);
         if (result.success) {
             res.status(200).json({ message: 'Payment successful' });
         } else {
@@ -27,6 +27,16 @@ exports.payInvoice = async (req, res) => {
         }
     } catch (error) {
         console.error("Error paying invoice:", error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+exports.getAllBills = async (req, res) => {
+    try {
+        const bills = await BillModel.getAllBills();
+        res.status(200).json(bills);
+    } catch (error) {
+        console.error("Error getting all bills:", error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };

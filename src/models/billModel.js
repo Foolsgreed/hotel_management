@@ -29,13 +29,13 @@ class BillModel {
         }
     }
 
-    static async payInvoice(invoiceNo, guestId) {
+    static async payInvoice(invoiceNo, paymentMode) {
         try {
             const pool = await poolPromise;
 
             const result = await pool.request()
                 .input('InvoiceNo', invoiceNo)
-                .input('GuestID', guestId)
+                .input('PaymentMode', paymentMode)
                 .query(`
                     DECLARE @TotalAmount DECIMAL(18,2);
                     
@@ -43,20 +43,43 @@ class BillModel {
                     FROM Booking b
                     INNER JOIN Room r ON b.RoomNo = r.RoomNo
                     INNER JOIN RoomType rt ON r.RoomType = rt.RoomType
-                    WHERE b.InvoiceNo = @InvoiceNo AND b.GuestID = @GuestID;
+                    WHERE b.InvoiceNo = @InvoiceNo;
 
                     IF @TotalAmount IS NULL SET @TotalAmount = 0;
 
                     UPDATE Bill 
-                    SET TotalAmount = @TotalAmount, PaymentStatus = 'Paid', PaymentDate = GETDATE(), PaymentMode = 'Credit Card'
-                    WHERE InvoiceNo = @InvoiceNo AND GuestID = @GuestID;
+                    SET TotalAmount = @TotalAmount, PaymentStatus = 'Paid', PaymentDate = GETDATE(), PaymentMode = @PaymentMode
+                    WHERE InvoiceNo = @InvoiceNo;
 
                     UPDATE Booking 
                     SET BookingStatus = 'CheckedOut'
-                    WHERE InvoiceNo = @InvoiceNo AND GuestID = @GuestID;
+                    WHERE InvoiceNo = @InvoiceNo;
                 `);
             
             return { success: true };
+        } catch (error) {
+            throw error;
+        }
+    }
+    static async getAllBills() {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request().query(`
+                SELECT 
+                    b.InvoiceNo,
+                    g.FirstName + ' ' + g.LastName AS GuestName,
+                    b.TotalAmount,
+                    b.PaymentDate,
+                    b.PaymentMode,
+                    b.PaymentStatus,
+                    STRING_AGG(bk.RoomNo, ', ') as RoomNo
+                FROM Bill b
+                INNER JOIN Guest g ON b.GuestID = g.GuestID
+                LEFT JOIN Booking bk ON b.InvoiceNo = bk.InvoiceNo
+                GROUP BY b.InvoiceNo, g.FirstName, g.LastName, b.TotalAmount, b.PaymentDate, b.PaymentMode, b.PaymentStatus
+                ORDER BY b.InvoiceNo DESC
+            `);
+            return result.recordset;
         } catch (error) {
             throw error;
         }

@@ -28,3 +28,29 @@ exports.searchRooms = async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+exports.getAllRoomsWithStatus = async (req, res) => {
+    try {
+        const rooms = await RoomModel.getAllRoomsWithStatus();
+        res.status(200).json(rooms);
+    } catch (error) {
+        console.error("Error in getAllRoomsWithStatus:", error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+exports.updateRoomStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!status) return res.status(400).json({ message: 'Status is required' });
+        const success = await RoomModel.updateRoomStatus(req.params.roomNo, status);
+        if (success) {
+            res.status(200).json({ message: 'Room status updated successfully' });
+        } else {
+            res.status(404).json({ message: 'Room not found' });
+        }
+    } catch (error) {
+        console.error("Error updating room status:", error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
