@@ -126,12 +126,12 @@
                         <div class="value" id="stat-total">0</div>
                     </div>
                     <div class="stat-card">
-                        <h3>Checked In</h3>
-                        <div class="value" id="stat-checkin">0</div>
+                        <h3>Cancelled Orders</h3>
+                        <div class="value" id="stat-cancelled">0</div>
                     </div>
                     <div class="stat-card">
-                        <h3>Checked Out</h3>
-                        <div class="value" id="stat-checkout">0</div>
+                        <h3>Completed Orders</h3>
+                        <div class="value" id="stat-completed">0</div>
                     </div>
                     <div class="stat-card">
                         <h3>Cancellation Rate</h3>
@@ -142,11 +142,86 @@
                         <div class="value" id="stat-revenue">$0</div>
                     </div>
                 </div>
-                
+
+                <!-- Walk-in Booking Modal -->
+                <div id="walkin-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
+                    <div style="background:var(--bg-light); border:1px solid var(--glass-border); padding:2rem; border-radius:12px; max-width:600px; width:90%; max-height:90vh; overflow-y:auto;">
+                        <h2 style="color:#fff; margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:0.5rem;">Create Walk-in Booking</h2>
+                        <form id="walkin-form" style="display:flex; flex-direction:column; gap:1rem;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                                <div>
+                                    <label style="color:#ccc; display:block; margin-bottom:0.3rem;">First Name</label>
+                                    <input type="text" id="walkin-fname" required style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="color:#ccc; display:block; margin-bottom:0.3rem;">Last Name</label>
+                                    <input type="text" id="walkin-lname" required style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="color:#ccc; display:block; margin-bottom:0.3rem;">Email</label>
+                                    <input type="email" id="walkin-email" required style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="color:#ccc; display:block; margin-bottom:0.3rem;">Phone No</label>
+                                    <input type="text" id="walkin-phone" style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="color:#ccc; display:block; margin-bottom:0.3rem;">Arrival Date</label>
+                                    <input type="date" id="walkin-arrival" required style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="color:#ccc; display:block; margin-bottom:0.3rem;">Departure Date</label>
+                                    <input type="date" id="walkin-departure" required style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                                </div>
+                            </div>
+                            
+                            <div style="border-top:1px solid var(--glass-border); padding-top:1rem; margin-top:0.5rem;">
+                                <label style="color:#ccc; display:block; margin-bottom:0.5rem;">Room Selections</label>
+                                <div id="walkin-room-selections" style="display:flex; flex-direction:column; gap:0.5rem;">
+                                    <div style="display:grid; grid-template-columns: 2fr 1.5fr; gap:1rem;">
+                                        <select class="walkin-room-type" required style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                                            <option value="" style="color:#000;">Select Room Type</option>
+                                            <option value="Standard Twin" style="color:#000;">Standard Twin</option>
+                                            <option value="Standard Double" style="color:#000;">Standard Double</option>
+                                            <option value="Deluxe" style="color:#000;">Deluxe</option>
+                                            <option value="Suite" style="color:#000;">Suite</option>
+                                        </select>
+                                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                                            <label style="color:#ccc; white-space:nowrap;">Rooms:</label>
+                                            <input type="number" class="walkin-room-qty" min="1" value="1" required style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="addWalkinRoomRow()" style="margin-top:0.5rem; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer; font-size:0.8rem;">+ Add Another Room Type</button>
+                            </div>
+
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                                <div>
+                                    <label style="color:#ccc; display:block; margin-bottom:0.3rem;">Total Adults</label>
+                                    <input type="number" id="walkin-adults" min="1" value="1" required style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="color:#ccc; display:block; margin-bottom:0.3rem;">Total Children</label>
+                                    <input type="number" id="walkin-children" min="0" value="0" style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                                </div>
+                            </div>
+                            
+                            <div style="text-align:right; margin-top:1rem;">
+                                <button type="button" class="btn-action btn-cancel" onclick="document.getElementById('walkin-modal').style.display='none'">Cancel</button>
+                                <button type="submit" class="btn-action btn-checkin" style="padding: 0.5rem 1.5rem; font-weight:bold;">Create Booking</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem; text-align: right;" id="walkin-booking-btn-container">
+                    <button class="btn-action" style="background:var(--primary); color:#000; font-weight:bold; padding: 0.6rem 1.2rem;" onclick="document.getElementById('walkin-modal').style.display='flex'">+ Create Walk-in Booking</button>
+                </div>
+
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Invoice No</th>
+                            <th>Order ID</th>
                             <th>Guest Name</th>
                             <th>Rooms</th>
                             <th>Arrival Date</th>
@@ -163,6 +238,29 @@
 
             <!-- Rooms Tab -->
             <section class="tab-section" id="tab-rooms">
+                <div style="margin-bottom: 1rem; text-align: right;" id="manage-pricing-btn-container" style="display:none;">
+                    <button class="btn-action" style="background:var(--primary); color:#000; font-weight:bold; padding: 0.6rem 1.2rem;" onclick="openPricingModal()">Manage Pricing</button>
+                </div>
+                <!-- Manage Pricing Modal -->
+                <div id="pricing-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
+                    <div style="background:var(--bg-light); border:1px solid var(--glass-border); padding:2rem; border-radius:12px; max-width:500px; width:90%; max-height:90vh; overflow-y:auto;">
+                        <h2 style="color:#fff; margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:0.5rem;">Manage Room Pricing</h2>
+                        <table class="data-table" style="margin-bottom:1rem;">
+                            <thead>
+                                <tr>
+                                    <th>Room Type</th>
+                                    <th>Price ($)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pricing-tbody">
+                            </tbody>
+                        </table>
+                        <div style="text-align:right;">
+                            <button class="btn-action btn-cancel" onclick="document.getElementById('pricing-modal').style.display='none'">Close</button>
+                        </div>
+                    </div>
+                </div>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -185,7 +283,7 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Invoice No</th>
+                            <th>Order ID</th>
                             <th>Guest Name</th>
                             <th>Total Amount</th>
                             <th>Status</th>
@@ -270,7 +368,13 @@
             if (!canViewBills) document.getElementById('nav-bills').style.display = 'none';
             if (!canManageEmployees) document.getElementById('nav-employees').style.display = 'none';
             if (!canViewStats) document.getElementById('stats-container').style.display = 'none';
-            if (canManageEmployees) document.getElementById('stat-revenue-card').style.display = 'block';
+            
+            if (isAdmin || isManager) {
+                document.getElementById('stat-revenue-card').style.display = 'block';
+                document.getElementById('manage-pricing-btn-container').style.display = 'block';
+            } else {
+                document.getElementById('manage-pricing-btn-container').style.display = 'none';
+            }
 
             // Activate first visible tab
             const firstVisible = document.querySelector('.nav-item:not([style*="display: none"])');
@@ -316,8 +420,8 @@
                 if (!res.ok) return;
                 const stats = await res.json();
                 document.getElementById('stat-total').textContent = stats.TotalBookings;
-                document.getElementById('stat-checkin').textContent = stats.CheckedIn;
-                document.getElementById('stat-checkout').textContent = stats.CheckedOut;
+                document.getElementById('stat-cancelled').textContent = stats.Cancelled;
+                document.getElementById('stat-completed').textContent = stats.CheckedOut;
                 document.getElementById('stat-rate').textContent = stats.CancellationRate + '%';
                 if (stats.TotalRevenue !== undefined) {
                     document.getElementById('stat-revenue').textContent = '$' + Number(stats.TotalRevenue).toLocaleString();
@@ -326,12 +430,18 @@
         }
 
         async function updateStatus(id, status) {
-            if (!confirm(`Are you sure you want to mark this booking as ${status}?`)) return;
+            let reason = null;
+            if (status === 'Cancelled') {
+                reason = prompt(`Are you sure you want to cancel this booking? \nPlease enter the reason:`);
+                if (!reason) return; // cancelled prompt
+            } else {
+                if (!confirm(`Are you sure you want to mark this booking as ${status}?`)) return;
+            }
             try {
                 const res = await fetch(`/api/bookings/${id}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status, employeeId: emp.EmployeeID })
+                    body: JSON.stringify({ status, employeeId: emp.EmployeeID, cancelReason: reason })
                 });
                 if (res.ok) { fetchStatistics(); fetchBookings(); }
                 else { const err = await res.json(); alert(err.message || 'Failed to update status'); }
@@ -364,7 +474,7 @@
                     else if (bStatus === 'CheckedOut') statusClass = 'color: #3498db;';
                     else if (bStatus === 'Cancelled') statusClass = 'color: #e74c3c;';
 
-                    let actions = `<button class="btn-action" style="background:#4a5568; color:#fff;" onclick="openBookingModal('${b.BookingID}', '${b.GuestName}', '${b.GuestPhone || ''}', '${b.GuestEmail || ''}', ${b.NumAdults || 1}, ${b.NumChildren || 0}, '${(b.SpecialReq || '').replace(/'/g, "\\'")}')">View</button>`;
+                    let actions = `<button class="btn-action" style="background:#4a5568; color:#fff;" onclick="openBookingModal('${b.BookingID}', '${b.GuestName}', '${b.GuestPhone || ''}', '${b.GuestEmail || ''}', ${b.NumAdults || 1}, ${b.NumChildren || 0}, '${(b.SpecialReq || '').replace(/'/g, "\\'")}', '${(b.CancelReason || '').replace(/'/g, "\\'")}')">View</button>`;
                     const canManage = emp.RoleTitle === 'Admin' || emp.RoleTitle === 'Manager' || emp.RoleTitle === 'Receptionist';
                     if (canManage) {
                         if (bStatus === 'Pending' || bStatus === 'Confirmed') {
@@ -481,7 +591,7 @@
             }
         }
 
-        function openBookingModal(invoiceNo, name, phone, email, adults, children, req) {
+        function openBookingModal(invoiceNo, name, phone, email, adults, children, req, cancelReason) {
             document.getElementById('modal-invoice-no').textContent = invoiceNo;
             document.getElementById('modal-guest-name').textContent = name;
             document.getElementById('modal-guest-phone').textContent = phone;
@@ -489,6 +599,15 @@
             document.getElementById('modal-adults').textContent = adults;
             document.getElementById('modal-children').textContent = children;
             document.getElementById('modal-special-req').textContent = req || 'None';
+            
+            const cancelContainer = document.getElementById('modal-cancel-reason-container');
+            if (cancelReason) {
+                document.getElementById('modal-cancel-reason').textContent = cancelReason;
+                cancelContainer.style.display = 'block';
+            } else {
+                cancelContainer.style.display = 'none';
+            }
+            
             document.getElementById('booking-modal').style.display = 'flex';
         }
 
@@ -507,6 +626,11 @@
                 let displayRooms = rooms;
                 if (emp.RoleTitle === 'Housekeeper') {
                     displayRooms = rooms.filter(r => r.RoomStatus === 'Cleaning');
+                }
+
+                if (displayRooms.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No rooms found.</td></tr>';
+                    return;
                 }
 
                 displayRooms.forEach(r => {
@@ -532,7 +656,7 @@
                             <td>${r.RoomNo}</td>
                             <td>${r.RoomType}</td>
                             <td>${r.FloorNo}</td>
-                            <td>${r.Occupancy}</td>
+                            <td>Max ${r.Occupancy}</td>
                             <td>$${r.RoomPrice}</td>
                             <td>${statusCell}</td>
                         </tr>
@@ -761,18 +885,123 @@
                 }
             } catch (err) { console.error(err); alert('Network error'); }
         }
+        // Walk-in booking JS
+        function addWalkinRoomRow() {
+            const container = document.getElementById('walkin-room-selections');
+            const div = document.createElement('div');
+            div.style.display = 'grid';
+            div.style.gridTemplateColumns = '2fr 1.5fr auto';
+            div.style.gap = '1rem';
+            div.style.alignItems = 'center';
+            div.innerHTML = `
+                <select class="walkin-room-type" required style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                    <option value="" style="color:#000;">Select Room Type</option>
+                    <option value="Standard Twin" style="color:#000;">Standard Twin</option>
+                    <option value="Standard Double" style="color:#000;">Standard Double</option>
+                    <option value="Deluxe" style="color:#000;">Deluxe</option>
+                    <option value="Suite" style="color:#000;">Suite</option>
+                </select>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <label style="color:#ccc; white-space:nowrap;">Rooms:</label>
+                    <input type="number" class="walkin-room-qty" min="1" value="1" required style="width:100%; padding:0.5rem; background:var(--glass-bg); border:1px solid var(--glass-border); color:#fff; border-radius:6px;">
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" style="background:transparent; border:none; color:#e74c3c; cursor:pointer; font-weight:bold; font-size:1.2rem;">&times;</button>
+            `;
+            container.appendChild(div);
+        }
+
+        document.getElementById('walkin-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const firstName = document.getElementById('walkin-fname').value;
+            const lastName = document.getElementById('walkin-lname').value;
+            const email = document.getElementById('walkin-email').value;
+            const phoneNo = document.getElementById('walkin-phone').value;
+            const arrivalDate = document.getElementById('walkin-arrival').value;
+            const departureDate = document.getElementById('walkin-departure').value;
+            const numAdults = document.getElementById('walkin-adults').value;
+            const numChildren = document.getElementById('walkin-children').value;
+            
+            const comboParts = [];
+            const types = document.querySelectorAll('.walkin-room-type');
+            const qtys = document.querySelectorAll('.walkin-room-qty');
+            for (let i = 0; i < types.length; i++) {
+                if (types[i].value && qtys[i].value > 0) {
+                    comboParts.push({ type: types[i].value, count: parseInt(qtys[i].value) });
+                }
+            }
+            if (comboParts.length === 0) return alert('Please select at least one room type.');
+
+            try {
+                const res = await fetch('/api/bookings/walkin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        firstName, lastName, email, phoneNo, arrivalDate, departureDate, numAdults, numChildren, comboParts
+                    })
+                });
+                if (res.ok) {
+                    alert('Walk-in booking created successfully!');
+                    document.getElementById('walkin-modal').style.display='none';
+                    document.getElementById('walkin-form').reset();
+                    fetchBookings();
+                    fetchStatistics();
+                } else {
+                    const err = await res.json();
+                    alert(err.message || 'Failed to create booking');
+                }
+            } catch (e) {
+                alert('Network error');
+            }
+        });
+
+        // Pricing logic
+        async function openPricingModal() {
+            try {
+                const res = await fetch('/api/rooms/types');
+                const types = await res.json();
+                const tbody = document.getElementById('pricing-tbody');
+                tbody.innerHTML = '';
+                types.forEach(t => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${t.RoomType}</td>
+                            <td><input type="number" id="price-${t.RoomType.replace(/\s+/g, '-')}" value="${t.RoomPrice}" style="width:80px; padding:0.2rem; background:var(--glass-bg); color:#fff; border:1px solid var(--glass-border); border-radius:4px;"></td>
+                            <td><button class="btn-action" style="background:#2ecc71; color:#fff;" onclick="savePrice('${t.RoomType}')">Save</button></td>
+                        </tr>
+                    `;
+                });
+                document.getElementById('pricing-modal').style.display = 'flex';
+            } catch (err) { console.error(err); alert('Failed to load prices'); }
+        }
+
+        async function savePrice(type) {
+            const price = document.getElementById(`price-${type.replace(/\s+/g, '-')}`).value;
+            try {
+                const res = await fetch(`/api/rooms/types/${encodeURIComponent(type)}/price`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ price })
+                });
+                if (res.ok) {
+                    alert('Price updated successfully');
+                    fetchRooms();
+                } else {
+                    alert('Failed to update price');
+                }
+            } catch (err) { console.error(err); alert('Network error'); }
+        }
     </script>
 <!-- View Booking Details Modal -->
                 <div id="booking-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
                     <div style="background:var(--bg-light); border:1px solid var(--glass-border); padding:2rem; border-radius:12px; max-width:500px; width:90%;">
-                        <h2 style="color:#fff; margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:0.5rem;">Booking Details: #<span id="modal-invoice-no"></span></h2>
+                        <h2 style="color:#fff; margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:0.5rem;">Booking Details: Order #<span id="modal-invoice-no"></span></h2>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem; color:#ccc;">
                             <div><strong>Guest Name:</strong> <br><span id="modal-guest-name"></span></div>
                             <div><strong>Phone:</strong> <br><span id="modal-guest-phone"></span></div>
-                            <div style="grid-column: span 2;"><strong>Email:</strong> <br><span id="modal-guest-email"></span></div>
-                            <div><strong>Adults:</strong> <br><span id="modal-adults"></span></div>
-                            <div><strong>Children:</strong> <br><span id="modal-children"></span></div>
-                            <div style="grid-column: span 2;"><strong>Special Requests:</strong><br><span id="modal-special-req" style="color:#fff; font-style:italic;"></span></div>
+                            <div><strong>Email:</strong> <br><span id="modal-guest-email"></span></div>
+                            <div><strong>Adults:</strong> <span id="modal-adults"></span> | <strong>Children:</strong> <span id="modal-children"></span></div>
+                            <div style="grid-column: span 2;"><strong>Special Requests:</strong> <br><span id="modal-special-req"></span></div>
+                            <div id="modal-cancel-reason-container" style="grid-column: span 2; display: none;"><strong>Cancel Reason:</strong> <br><span id="modal-cancel-reason" style="color:#e74c3c;"></span></div>
                         </div>
                         <div style="text-align:right;">
                             <button class="btn-action btn-cancel" onclick="document.getElementById('booking-modal').style.display='none'">Close</button>
@@ -783,7 +1012,7 @@
                 <!-- Check In Modal -->
                 <div id="checkin-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
                     <div style="background:var(--bg-light); border:1px solid var(--glass-border); padding:2rem; border-radius:12px; max-width:500px; width:90%;">
-                        <h2 style="color:#fff; margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:0.5rem;">Check In Booking: #<span id="checkin-invoice-no"></span></h2>
+                        <h2 style="color:#fff; margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:0.5rem;">Check In Booking: Order #<span id="checkin-invoice-no"></span></h2>
                         <div id="checkin-rooms-container" style="display:flex; flex-direction:column; gap:1rem; margin-bottom:1.5rem; color:#ccc; max-height:300px; overflow-y:auto;">
                             <!-- Room selects will be injected here -->
                         </div>
@@ -797,7 +1026,7 @@
                 <!-- Bill Details Modal -->
                 <div id="bill-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
                     <div style="background:var(--bg-light); border:1px solid var(--glass-border); padding:2rem; border-radius:12px; max-width:600px; width:90%;">
-                        <h2 style="color:#fff; margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:0.5rem;">Bill Details: Invoice #<span id="bill-modal-invoice-no"></span></h2>
+                        <h2 style="color:#fff; margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:0.5rem;">Bill Details: Order #<span id="bill-modal-invoice-no"></span></h2>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem; color:#ccc;">
                             <div><strong>Guest Name:</strong> <br><span id="bill-modal-guest-name"></span></div>
                             <div><strong>Phone:</strong> <br><span id="bill-modal-guest-phone"></span></div>

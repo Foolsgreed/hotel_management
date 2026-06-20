@@ -57,3 +57,30 @@ exports.updateRoomStatus = async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+exports.getRoomTypes = async (req, res) => {
+    try {
+        const types = await RoomModel.getRoomTypes();
+        res.status(200).json(types);
+    } catch (error) {
+        console.error('Error fetching room types:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+exports.updateRoomPrice = async (req, res) => {
+    try {
+        const { type } = req.params;
+        const { price } = req.body;
+        if (!price) return res.status(400).json({ message: 'Price is required' });
+        const success = await RoomModel.updateRoomPrice(type, price);
+        if (success) {
+            res.status(200).json({ message: 'Price updated successfully' });
+        } else {
+            res.status(404).json({ message: 'Room type not found' });
+        }
+    } catch (error) {
+        console.error('Error updating room price:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};

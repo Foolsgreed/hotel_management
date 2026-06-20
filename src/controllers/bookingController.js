@@ -1,4 +1,5 @@
 const BookingModel = require('../models/bookingModel');
+const GuestModel = require('../models/guestModel');
 
 exports.getAllBookings = async (req, res) => {
     try {
@@ -7,6 +8,27 @@ exports.getAllBookings = async (req, res) => {
     } catch (error) {
         console.error("Error fetching bookings:", error);
         res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+exports.createWalkinBooking = async (req, res) => {
+    try {
+        const { firstName, lastName, email, phoneNo, comboParts, arrivalDate, departureDate, numAdults, numChildren, specialReq } = req.body;
+        
+        if (!firstName || !lastName || !email || !comboParts || !arrivalDate || !departureDate) {
+            return res.status(400).json({ message: 'All required fields must be provided' });
+        }
+
+        let guest = await GuestModel.findByEmail(email);
+        if (!guest) {
+            guest = await GuestModel.register(firstName, lastName, email, '123456', phoneNo);
+        }
+
+        const invoiceNo = await BookingModel.createBookingOrder(guest.GuestID, comboParts, arrivalDate, departureDate, numAdults, numChildren, specialReq);
+        res.status(201).json({ message: 'Booking order created successfully', invoiceNo: invoiceNo });
+    } catch (error) {
+        console.error("Error creating walkin booking order:", error);
+        res.status(500).json({ message: error.message || 'Internal Server Error' });
     }
 };
 
@@ -48,11 +70,11 @@ exports.createBooking = async (req, res) => {
 exports.updateBookingStatus = async (req, res) => {
     try {
         const bookingId = req.params.id;
-        const { status } = req.body;
+        const { status, cancelReason } = req.body;
         if (!status) {
             return res.status(400).json({ message: 'Status is required' });
         }
-        const success = await BookingModel.updateBookingStatus(bookingId, status);
+        const success = await BookingModel.updateBookingStatus(bookingId, status, cancelReason);
         if (success) {
             res.status(200).json({ message: 'Status updated successfully' });
         } else {
@@ -89,10 +111,11 @@ exports.cancelBooking = async (req, res) => {
     try {
         const bookingId = req.params.id;
         const guestId = req.body.guestId; // Should be in body or from auth token
+        const cancelReason = req.body.cancelReason;
         if (!guestId) {
             return res.status(400).json({ message: 'Guest ID is required' });
         }
-        const success = await BookingModel.cancelBooking(bookingId, guestId);
+        const success = await BookingModel.cancelBooking(bookingId, guestId, cancelReason);
         if (success) {
             res.status(200).json({ message: 'Booking cancelled successfully' });
         } else {

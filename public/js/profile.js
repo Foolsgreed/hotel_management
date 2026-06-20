@@ -102,7 +102,9 @@ async function loadBookings(guestId) {
 }
 
 async function cancelGroupedBookings(bookingIdsStr) {
-    if (!confirm('Are you sure you want to cancel this entire booking order?')) return;
+    const reason = prompt('Are you sure you want to cancel this entire booking order?\nPlease enter a reason for cancellation:');
+    if (!reason) return; // User cancelled the prompt or entered empty string
+    
     const guest = JSON.parse(localStorage.getItem('guest'));
     const ids = bookingIdsStr.split(',').map(id => parseInt(id));
     let hasError = false;
@@ -111,7 +113,7 @@ async function cancelGroupedBookings(bookingIdsStr) {
             const response = await fetch(`/api/bookings/${id}/cancel`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ guestId: guest.GuestID })
+                body: JSON.stringify({ guestId: guest.GuestID, cancelReason: reason })
             });
             if (!response.ok) hasError = true;
         } catch (e) {

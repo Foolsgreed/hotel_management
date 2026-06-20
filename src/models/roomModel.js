@@ -127,6 +127,31 @@ class RoomModel {
             throw error;
         }
     }
+    static async getRoomTypes() {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request()
+                .query(`SELECT RoomType, RoomPrice FROM RoomType`);
+            return result.recordset;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateRoomPrice(type, price) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request()
+                .input('RoomType', type)
+                .input('Price', price)
+                .query(`
+                    UPDATE RoomType SET RoomPrice = @Price WHERE RoomType = @RoomType
+                `);
+            return result.rowsAffected[0] > 0;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = RoomModel;

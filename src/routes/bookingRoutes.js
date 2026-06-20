@@ -29,4 +29,7 @@ router.get('/:invoiceNo/details', bookingController.getBookingDetailsByInvoice);
 // PUT /api/bookings/:invoiceNo/checkin
 router.put('/:invoiceNo/checkin', bookingController.checkInBooking);
 
+// POST /api/bookings/walkin
+router.post('/walkin', bookingController.createWalkinBooking);
+
 module.exports = router;

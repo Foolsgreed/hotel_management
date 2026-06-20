@@ -14,4 +14,10 @@ router.get('/status', roomController.getAllRoomsWithStatus);
 // PUT /api/rooms/:roomNo/status
 router.put('/:roomNo/status', roomController.updateRoomStatus);
 
+// GET /api/rooms/types
+router.get('/types', roomController.getRoomTypes);
+
+// PUT /api/rooms/types/:type/price
+router.put('/types/:type/price', roomController.updateRoomPrice);
+
 module.exports = router;

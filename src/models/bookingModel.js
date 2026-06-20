@@ -16,7 +16,8 @@ class BookingModel {
                     b.BookingStatus,
                     MAX(b.NumAdults) AS NumAdults, 
                     MAX(b.NumChildren) AS NumChildren, 
-                    MAX(b.SpecialReq) AS SpecialReq
+                    MAX(b.SpecialReq) AS SpecialReq,
+                    MAX(CAST(b.CancelReason AS VARCHAR(MAX))) AS CancelReason
                 FROM Booking b
                 INNER JOIN Guest g ON b.GuestID = g.GuestID
                 LEFT JOIN Room r ON b.RoomNo = r.RoomNo
@@ -83,21 +84,31 @@ class BookingModel {
         }
     }
 
-    static async updateBookingStatus(invoiceNo, status) {
+    static async updateBookingStatus(invoiceNo, status, cancelReason = null) {
         try {
             const pool = await poolPromise;
             const transaction = pool.transaction();
             await transaction.begin();
             
             try {
-                const result = await transaction.request()
+                let updateQuery = `
+                    UPDATE Booking
+                    SET BookingStatus = @Status
+                `;
+                if (status === 'Cancelled' && cancelReason) {
+                    updateQuery += `, CancelReason = @CancelReason `;
+                }
+                updateQuery += ` WHERE InvoiceNo = @InvoiceNo `;
+
+                const request = transaction.request()
                     .input('InvoiceNo', invoiceNo)
-                    .input('Status', status)
-                    .query(`
-                        UPDATE Booking
-                        SET BookingStatus = @Status
-                        WHERE InvoiceNo = @InvoiceNo
-                    `);
+                    .input('Status', status);
+                
+                if (status === 'Cancelled' && cancelReason) {
+                    request.input('CancelReason', cancelReason);
+                }
+
+                const result = await request.query(updateQuery);
                 
                 if (status === 'CheckedOut') {
                     await transaction.request()
@@ -137,13 +148,12 @@ class BookingModel {
     static async getBookingStatistics() {
         try {
             const pool = await poolPromise;
-            // Get stats for current month as an example.
+            // Get stats for current month based on BookingDate
             const result = await pool.request().query(`
                 SELECT 
-                    COUNT(*) as TotalBookings,
-                    SUM(CASE WHEN BookingStatus = 'Cancelled' THEN 1 ELSE 0 END) as Cancelled,
-                    SUM(CASE WHEN BookingStatus = 'CheckedIn' THEN 1 ELSE 0 END) as CheckedIn,
-                    SUM(CASE WHEN BookingStatus = 'CheckedOut' THEN 1 ELSE 0 END) as CheckedOut
+                    COUNT(DISTINCT InvoiceNo) as TotalBookings,
+                    COUNT(DISTINCT CASE WHEN BookingStatus = 'Cancelled' THEN InvoiceNo END) as Cancelled,
+                    COUNT(DISTINCT CASE WHEN BookingStatus = 'CheckedOut' THEN InvoiceNo END) as CheckedOut
                 FROM Booking
                 WHERE MONTH(BookingDate) = MONTH(GETDATE()) 
                   AND YEAR(BookingDate) = YEAR(GETDATE())
@@ -158,13 +168,13 @@ class BookingModel {
             const row = result.recordset[0];
             const total = row.TotalBookings || 0;
             const cancelled = row.Cancelled || 0;
+            const checkedOut = row.CheckedOut || 0;
             const rate = total > 0 ? Math.round((cancelled / total) * 100) : 0;
             
             return {
                 TotalBookings: total,
                 Cancelled: cancelled,
-                CheckedIn: row.CheckedIn || 0,
-                CheckedOut: row.CheckedOut || 0,
+                CheckedOut: checkedOut,
                 CancellationRate: rate,
                 TotalRevenue: revenueResult.recordset[0].TotalRevenue || 0
             };
@@ -300,7 +310,7 @@ class BookingModel {
         }
     }
 
-    static async cancelBooking(bookingId, guestId) {
+    static async cancelBooking(bookingId, guestId, cancelReason = null) {
         try {
             const pool = await poolPromise;
             const transaction = pool.transaction();
@@ -311,9 +321,10 @@ class BookingModel {
                 const updateRes = await transaction.request()
                     .input('BookingID', bookingId)
                     .input('GuestID', guestId)
+                    .input('CancelReason', cancelReason)
                     .query(`
                         UPDATE Booking
-                        SET BookingStatus = 'Cancelled'
+                        SET BookingStatus = 'Cancelled', CancelReason = @CancelReason
                         WHERE BookingID = @BookingID 
                           AND GuestID = @GuestID 
                           AND (BookingStatus IS NULL OR (BookingStatus NOT IN ('Cancelled', 'CheckedIn', 'CheckedOut')))
@@ -375,7 +386,7 @@ class BookingModel {
             const bookingsResult = await pool.request()
                 .input('InvoiceNo', invoiceNo)
                 .query(`
-                    SELECT b.BookingID, b.RoomNo, b.RoomType, b.ArrivalDate, b.DepartureDate, b.BookingStatus
+                    SELECT b.BookingID, b.RoomNo, b.RoomType, b.ArrivalDate, b.DepartureDate, b.BookingStatus, b.CancelReason
                     FROM Booking b
                     WHERE b.InvoiceNo = @InvoiceNo
                 `);
