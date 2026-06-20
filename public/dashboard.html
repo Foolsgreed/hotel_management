@@ -6,6 +6,7 @@
     <title>Dashboard - Grand Palace Hotel</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background-color: var(--bg-dark); }
         .dashboard { display: flex; min-height: 100vh; }
@@ -101,6 +102,7 @@
             <div class="nav-item active" data-tab="bookings" id="nav-bookings">Bookings</div>
             <div class="nav-item" data-tab="rooms" id="nav-rooms">Rooms</div>
             <div class="nav-item" data-tab="bills" id="nav-bills">Bills</div>
+            <div class="nav-item" data-tab="revenue" id="nav-revenue">Revenue & Stats</div>
             <div class="nav-item" data-tab="employees" id="nav-employees">Employees</div>
         </aside>
         <main class="main-content">
@@ -120,29 +122,6 @@
 
             <!-- Bookings Tab -->
             <section class="tab-section active" id="tab-bookings">
-                <div class="stats-grid" id="stats-container">
-                    <div class="stat-card">
-                        <h3>This Month's Bookings</h3>
-                        <div class="value" id="stat-total">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Cancelled Orders</h3>
-                        <div class="value" id="stat-cancelled">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Completed Orders</h3>
-                        <div class="value" id="stat-completed">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Cancellation Rate</h3>
-                        <div class="value" id="stat-rate">0%</div>
-                    </div>
-                    <div class="stat-card" id="stat-revenue-card" style="display:none;">
-                        <h3>Total Revenue</h3>
-                        <div class="value" id="stat-revenue">$0</div>
-                    </div>
-                </div>
-
                 <!-- Walk-in Booking Modal -->
                 <div id="walkin-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
                     <div style="background:var(--bg-light); border:1px solid var(--glass-border); padding:2rem; border-radius:12px; max-width:600px; width:90%; max-height:90vh; overflow-y:auto;">
@@ -285,6 +264,43 @@
                 </table>
             </section>
 
+            <!-- Revenue & Statistics Tab -->
+            <section class="tab-section" id="tab-revenue">
+                <div class="stats-grid" id="revenue-kpi-container">
+                    <div class="stat-card">
+                        <h3>Total Revenue (Paid Bills)</h3>
+                        <div class="value" id="rev-total-bills">$0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Booked Revenue</h3>
+                        <div class="value" id="rev-total-bookings">$0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Completed Bookings</h3>
+                        <div class="value" id="rev-completed">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Cancellation Rate</h3>
+                        <div class="value" id="rev-cancel-rate">0%</div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    <div style="background: var(--glass-bg); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+                        <h3 style="color: #fff; margin-bottom: 1rem;">Revenue Trend</h3>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="revenueTrendChart"></canvas>
+                        </div>
+                    </div>
+                    <div style="background: var(--glass-bg); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+                        <h3 style="color: #fff; margin-bottom: 1rem;">Bookings by Status</h3>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="bookingStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Employees Tab -->
             <section class="tab-section" id="tab-employees">
                 <div style="display:flex; justify-content:flex-end; margin-bottom: 1rem;">
@@ -345,19 +361,18 @@
             const isHousekeeper = emp.RoleTitle === 'Housekeeper';
             
             const canManageEmployees = isAdmin || isManager;
-            const canViewBookings = isManager || isRecep;
+            const canViewBookings = isRecep;
             const canViewRooms = isManager || isRecep || isHousekeeper;
-            const canViewBills = isRecep;
-            const canViewStats = isAdmin || isManager;
+            const canViewBills = isManager || isRecep;
+            const canViewRevenue = isAdmin || isManager;
 
             if (!canViewBookings) document.getElementById('nav-bookings').style.display = 'none';
             if (!canViewRooms) document.getElementById('nav-rooms').style.display = 'none';
             if (!canViewBills) document.getElementById('nav-bills').style.display = 'none';
+            if (!canViewRevenue) document.getElementById('nav-revenue').style.display = 'none';
             if (!canManageEmployees) document.getElementById('nav-employees').style.display = 'none';
-            if (!canViewStats) document.getElementById('stats-container').style.display = 'none';
             
             if (isAdmin || isManager) {
-                document.getElementById('stat-revenue-card').style.display = 'block';
                 document.getElementById('manage-pricing-btn-container').style.display = 'block';
             } else {
                 document.getElementById('manage-pricing-btn-container').style.display = 'none';
@@ -381,12 +396,16 @@
             document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
             document.getElementById(`nav-${tab}`).classList.add('active');
             document.getElementById(`tab-${tab}`).classList.add('active');
-            document.getElementById('tab-title').textContent = tab.charAt(0).toUpperCase() + tab.slice(1);
+            
+            let title = tab.charAt(0).toUpperCase() + tab.slice(1);
+            if (tab === 'revenue') title = 'Revenue & Statistics';
+            document.getElementById('tab-title').textContent = title;
 
-            if (tab === 'bookings') { fetchStatistics(); fetchBookings(); }
+            if (tab === 'bookings') fetchBookings();
             if (tab === 'rooms') fetchRooms();
             if (tab === 'bills') fetchBills();
             if (tab === 'employees') { fetchRoles(); fetchEmployees(); }
+            if (tab === 'revenue') loadRevenueDashboard();
         }
 
         function toggleProfileMenu(e) {
@@ -401,19 +420,110 @@
         }
 
         // ---------- BOOKINGS ----------
-        async function fetchStatistics() {
+        // ---------- REVENUE & STATISTICS ----------
+        let revTrendChartInst = null;
+        let bookingStatusChartInst = null;
+
+        async function loadRevenueDashboard() {
             try {
-                const res = await fetch(`/api/bookings/statistics?employeeId=${emp.EmployeeID}`);
-                if (!res.ok) return;
-                const stats = await res.json();
-                document.getElementById('stat-total').textContent = stats.TotalBookings;
-                document.getElementById('stat-cancelled').textContent = stats.Cancelled;
-                document.getElementById('stat-completed').textContent = stats.CheckedOut;
-                document.getElementById('stat-rate').textContent = stats.CancellationRate + '%';
-                if (stats.TotalRevenue !== undefined) {
-                    document.getElementById('stat-revenue').textContent = '$' + Number(stats.TotalRevenue).toLocaleString();
+                const [bookingsRes, billsRes] = await Promise.all([
+                    fetch(`/api/bookings?employeeId=${emp.EmployeeID}`),
+                    fetch(`/api/bills?employeeId=${emp.EmployeeID}`)
+                ]);
+                
+                if (!bookingsRes.ok || !billsRes.ok) return;
+                
+                const bookings = await bookingsRes.json();
+                const bills = await billsRes.json();
+                
+                // 1. Calculate KPIs
+                const paidBills = bills.filter(b => b.PaymentStatus === 'Paid');
+                const totalRevenueBills = paidBills.reduce((sum, b) => sum + (Number(b.TotalAmount) || 0), 0);
+                
+                const completedBookings = bookings.filter(b => b.BookingStatus === 'CheckedOut');
+                const totalRevenueBookings = bills.reduce((sum, b) => sum + (Number(b.TotalAmount) || 0), 0);
+                
+                const cancelledBookings = bookings.filter(b => b.BookingStatus === 'Cancelled');
+                const cancelRate = bookings.length > 0 ? ((cancelledBookings.length / bookings.length) * 100).toFixed(1) : 0;
+                
+                document.getElementById('rev-total-bills').textContent = '$' + totalRevenueBills.toLocaleString();
+                document.getElementById('rev-total-bookings').textContent = '$' + totalRevenueBookings.toLocaleString();
+                document.getElementById('rev-completed').textContent = completedBookings.length;
+                document.getElementById('rev-cancel-rate').textContent = cancelRate + '%';
+                
+                // 2. Prepare Data for Charts
+                // Bookings by Status
+                const statusCounts = { Pending: 0, Confirmed: 0, CheckedIn: 0, CheckedOut: 0, Cancelled: 0 };
+                bookings.forEach(b => {
+                    if (statusCounts[b.BookingStatus] !== undefined) statusCounts[b.BookingStatus]++;
+                });
+                
+                // Revenue Trend (Last 7 Days) based on Bills
+                const today = new Date();
+                const trendLabels = [];
+                const trendData = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(today);
+                    d.setDate(d.getDate() - i);
+                    const dateStr = d.toISOString().split('T')[0];
+                    trendLabels.push(dateStr.substring(5)); // MM-DD
+                    
+                    // Sum bills paid on this date
+                    const dailySum = paidBills.filter(b => b.PaymentDate && b.PaymentDate.startsWith(dateStr))
+                                              .reduce((sum, b) => sum + (Number(b.TotalAmount) || 0), 0);
+                    trendData.push(dailySum);
                 }
-            } catch (error) { console.error(error); }
+                
+                // 3. Render Charts
+                const ctxTrend = document.getElementById('revenueTrendChart').getContext('2d');
+                if (revTrendChartInst) revTrendChartInst.destroy();
+                revTrendChartInst = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: trendLabels,
+                        datasets: [{
+                            label: 'Daily Revenue ($)',
+                            data: trendData,
+                            borderColor: '#cba052',
+                            backgroundColor: 'rgba(203, 160, 82, 0.2)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: '#fff' } } },
+                        scales: {
+                            x: { ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                            y: { ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                        }
+                    }
+                });
+                
+                const ctxStatus = document.getElementById('bookingStatusChart').getContext('2d');
+                if (bookingStatusChartInst) bookingStatusChartInst.destroy();
+                bookingStatusChartInst = new Chart(ctxStatus, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(statusCounts),
+                        datasets: [{
+                            data: Object.values(statusCounts),
+                            backgroundColor: ['#f1c40f', '#3498db', '#9b59b6', '#2ecc71', '#e74c3c'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: '#fff' } }
+                        }
+                    }
+                });
+                
+            } catch (error) { console.error("Error loading revenue dashboard:", error); }
         }
 
         async function updateStatus(id, status) {
