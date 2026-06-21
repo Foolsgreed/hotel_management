@@ -290,3 +290,51 @@ document.getElementById('edit-profile-form')?.addEventListener('submit', async (
         btn.textContent = 'Save Changes';
     }
 });
+
+function openChangePasswordModal() {
+    document.getElementById('change-password-form').reset();
+    document.getElementById('change-password-modal').style.display = 'flex';
+}
+
+document.getElementById('change-password-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('change-password-btn');
+    const currentPassword = document.getElementById('cp-current').value;
+    const newPassword = document.getElementById('cp-new').value;
+    const confirmPassword = document.getElementById('cp-confirm').value;
+
+    if (newPassword !== confirmPassword) {
+        alert("New passwords do not match!");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Changing...';
+
+    const guest = JSON.parse(localStorage.getItem('guest'));
+    const data = {
+        guestId: guest.GuestID,
+        currentPassword,
+        newPassword
+    };
+
+    try {
+        const response = await fetch('/api/auth/profile/password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (response.ok) {
+            alert('Password changed successfully!');
+            document.getElementById('change-password-modal').style.display = 'none';
+        } else {
+            alert(result.message || 'Error changing password.');
+        }
+    } catch(err) {
+        alert('Server connection error.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Change Password';
+    }
+});

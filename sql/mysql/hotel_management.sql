@@ -51,7 +51,7 @@ CREATE TABLE Room (
     HotelCode INT FOREIGN KEY REFERENCES Hotel(HotelCode),
     Occupancy INT,
     FloorNo INT,
-    RoomStatus VARCHAR(50)
+    RoomStatus VARCHAR(50) DEFAULT 'Available'
 );
 
 -- 5. Table Employee
@@ -108,7 +108,9 @@ CREATE TABLE Booking (
     NumAdults INT,
     NumChildren INT,
     SpecialReq NVARCHAR(MAX),
-    BookingStatus VARCHAR(50)
+    BookingStatus VARCHAR(50),
+    CancelReason NVARCHAR(MAX),
+    RoomType VARCHAR(50) FOREIGN KEY REFERENCES RoomType(RoomType)
 );
 
 -- 9. Table Review

@@ -10,6 +10,20 @@ exports.getAllRooms = async (req, res) => {
     }
 };
 
+exports.getAvailableSpecificRooms = async (req, res) => {
+    try {
+        const { arrivalDate, departureDate } = req.body;
+        if (!arrivalDate || !departureDate) {
+            return res.status(400).json({ message: 'Arrival and Departure dates are required' });
+        }
+        const rooms = await RoomModel.getAvailableSpecificRooms(arrivalDate, departureDate);
+        res.status(200).json(rooms);
+    } catch (error) {
+        console.error("Error fetching available specific rooms:", error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
 exports.searchRooms = async (req, res) => {
     try {
         const { arrivalDate, departureDate, guests, numRooms } = req.body;
@@ -42,22 +56,14 @@ exports.getAllRoomsWithStatus = async (req, res) => {
 exports.updateRoomStatus = async (req, res) => {
     try {
         const roomNo = req.params.roomNo;
-        const { status, employeeId } = req.body;
+        const { status } = req.body;
         if (!status) {
             return res.status(400).json({ message: 'Status is required' });
         }
 
-        if (employeeId) {
-            const { poolPromise } = require('../config/db');
-            const pool = await poolPromise;
-            const empRes = await pool.request()
-                .input('EmployeeID', employeeId)
-                .query('SELECT r.RoleTitle FROM Employee e JOIN Role r ON e.RoleID = r.RoleID WHERE e.EmployeeID = @EmployeeID');
-            if (empRes.recordset.length > 0) {
-                const role = empRes.recordset[0].RoleTitle;
-                if (role === 'Housekeeper' && !['Available', 'Cleaning'].includes(status)) {
-                    return res.status(403).json({ message: `Housekeeper cannot set room status to '${status}'.` });
-                }
+        if (req.user && req.user.RoleTitle === 'Housekeeper') {
+            if (!['Available', 'Cleaning'].includes(status)) {
+                return res.status(403).json({ message: `Housekeeper cannot set room status to '${status}'.` });
             }
         }
 

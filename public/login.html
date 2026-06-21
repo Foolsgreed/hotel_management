@@ -129,6 +129,7 @@
                 if (response.ok) {
                     if (data.role === 'admin') {
                         localStorage.setItem('employee', JSON.stringify(data.user));
+                        localStorage.setItem('token', data.token);
                         alert('Admin login successful!');
                         window.location.href = '/dashboard.html';
                     } else {

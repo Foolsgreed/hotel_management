@@ -11,4 +11,7 @@ router.post('/login', authController.login);
 // PUT /api/auth/profile
 router.put('/profile', authController.updateProfile);
 
+// PUT /api/auth/profile/password
+router.put('/profile/password', authController.changePassword);
+
 module.exports = router;

@@ -33,6 +33,9 @@ SELECT 'view_statistics', 'See dashboard stats/analytics' WHERE NOT EXISTS (SELE
 
 INSERT INTO Permission (PermissionKey, PermissionDesc)
 SELECT 'system_settings', 'Hotel-wide settings' WHERE NOT EXISTS (SELECT 1 FROM Permission WHERE PermissionKey = 'system_settings');
+
+INSERT INTO Permission (PermissionKey, PermissionDesc)
+SELECT 'manage_pricing', 'Edit room pricing' WHERE NOT EXISTS (SELECT 1 FROM Permission WHERE PermissionKey = 'manage_pricing');
 GO
 
 -- ADMIN: Auto-map full quyền (Bao gồm cả quản lý Role và Setting hệ thống)
@@ -56,7 +59,8 @@ WHERE r.RoleTitle = 'Manager'
       'view_bills', 'manage_bills', 
       'view_guests', 
       'manage_employees', 
-      'view_statistics'
+      'view_statistics',
+      'manage_pricing'
   )
   AND NOT EXISTS (SELECT 1 FROM RolePermission rp WHERE rp.RoleID = r.RoleID AND rp.PermissionID = p.PermissionID);
 

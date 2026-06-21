@@ -288,6 +288,92 @@ class BookingModel {
         }
     }
 
+    static async createWalkinBookingDirect(guestID, roomNos, arrivalDate, departureDate, numAdults, numChildren, specialReq) {
+        try {
+            const pool = await poolPromise;
+            const transaction = pool.transaction();
+            await transaction.begin();
+
+            try {
+                // 1. Create Bill immediately to get InvoiceNo
+                const billResult = await transaction.request()
+                    .input('GuestID', guestID)
+                    .query(`
+                        INSERT INTO Bill (GuestID, TotalAmount, PaymentStatus)
+                        OUTPUT INSERTED.InvoiceNo
+                        VALUES (@GuestID, 0, 'Unpaid')
+                    `);
+                const invoiceNo = billResult.recordset[0].InvoiceNo;
+
+                // 2. Iterate and create bookings for each room requested
+                for (let roomNo of roomNos) {
+                    const roomInfoQuery = await transaction.request()
+                        .input('RoomNo', roomNo)
+                        .input('ArrivalDate', arrivalDate)
+                        .input('DepartureDate', departureDate)
+                        .query(`
+                            SELECT r.HotelCode, r.RoomType 
+                            FROM Room r
+                            WHERE r.RoomNo = @RoomNo
+                            AND r.RoomNo NOT IN (
+                                SELECT RoomNo FROM Booking 
+                                WHERE RoomNo IS NOT NULL
+                                  AND ArrivalDate < @DepartureDate AND DepartureDate > @ArrivalDate
+                                  AND BookingStatus != 'Cancelled'
+                            )
+                        `);
+                    
+                    if (roomInfoQuery.recordset.length === 0) {
+                        throw new Error(`Room ${roomNo} is not available for the selected dates.`);
+                    }
+                    
+                    const roomInfo = roomInfoQuery.recordset[0];
+
+                    await transaction.request()
+                        .input('HotelCode', roomInfo.HotelCode)
+                        .input('GuestID', guestID)
+                        .input('RoomNo', roomNo)
+                        .input('RoomType', roomInfo.RoomType)
+                        .input('InvoiceNo', invoiceNo)
+                        .input('ArrivalDate', arrivalDate)
+                        .input('DepartureDate', departureDate)
+                        .input('NumAdults', numAdults)
+                        .input('NumChildren', numChildren)
+                        .input('SpecialReq', specialReq || '')
+                        .query(`
+                            INSERT INTO Booking (HotelCode, GuestID, RoomNo, RoomType, InvoiceNo, BookingDate, BookingTime, ArrivalDate, DepartureDate, NumAdults, NumChildren, BookingStatus, SpecialReq)
+                            VALUES (@HotelCode, @GuestID, @RoomNo, @RoomType, @InvoiceNo, CAST(GETDATE() AS DATE), CAST(GETDATE() AS TIME), @ArrivalDate, @DepartureDate, @NumAdults, @NumChildren, 'CheckedIn', @SpecialReq)
+                        `);
+                }
+
+                // 3. Update Bill TotalAmount
+                await transaction.request()
+                    .input('InvoiceNo', invoiceNo)
+                    .query(`
+                        DECLARE @TotalAmount DECIMAL(18,2);
+                        SELECT @TotalAmount = SUM(rt.RoomPrice * CASE WHEN DATEDIFF(day, b.ArrivalDate, b.DepartureDate) = 0 THEN 1 ELSE DATEDIFF(day, b.ArrivalDate, b.DepartureDate) END)
+                        FROM Booking b
+                        INNER JOIN RoomType rt ON b.RoomType = rt.RoomType
+                        WHERE b.InvoiceNo = @InvoiceNo AND b.BookingStatus != 'Cancelled';
+
+                        IF @TotalAmount IS NULL SET @TotalAmount = 0;
+
+                        UPDATE Bill 
+                        SET TotalAmount = @TotalAmount
+                        WHERE InvoiceNo = @InvoiceNo;
+                    `);
+
+                await transaction.commit();
+                return invoiceNo;
+            } catch (err) {
+                await transaction.rollback();
+                throw err;
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
     static async getBookingsByGuest(guestId) {
         try {
             const pool = await poolPromise;

@@ -6,11 +6,36 @@ class RoomModel {
             const pool = await poolPromise;
             // JOIN Room and RoomType to get complete info
             const result = await pool.request().query(`
-                SELECT r.RoomNo, r.Occupancy, rt.RoomType, rt.RoomPrice, rt.RoomImg, rt.RoomDesc, h.HotelName
+                SELECT r.RoomNo, r.Occupancy, rt.RoomType, rt.RoomPrice, rt.RoomImg, rt.RoomDesc, h.HotelName, r.RoomStatus
                 FROM Room r
                 INNER JOIN RoomType rt ON r.RoomType = rt.RoomType
                 INNER JOIN Hotel h ON r.HotelCode = h.HotelCode
             `);
+            return result.recordset;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getAvailableSpecificRooms(arrivalDate, departureDate) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request()
+                .input('ArrivalDate', arrivalDate)
+                .input('DepartureDate', departureDate)
+                .query(`
+                    SELECT r.RoomNo, r.RoomType, rt.RoomPrice, r.Occupancy
+                    FROM Room r
+                    INNER JOIN RoomType rt ON r.RoomType = rt.RoomType
+                    WHERE (r.RoomStatus IS NULL OR r.RoomStatus != 'Maintenance')
+                    AND r.RoomNo NOT IN (
+                        SELECT RoomNo FROM Booking 
+                        WHERE RoomNo IS NOT NULL 
+                        AND BookingStatus != 'Cancelled'
+                        AND (ArrivalDate < @DepartureDate AND DepartureDate > @ArrivalDate)
+                    )
+                    ORDER BY r.RoomNo ASC
+                `);
             return result.recordset;
         } catch (error) {
             throw error;
@@ -24,14 +49,21 @@ class RoomModel {
                 .input('ArrivalDate', arrivalDate)
                 .input('DepartureDate', departureDate)
                 .query(`
-                    SELECT r.RoomType, rt.RoomPrice, rt.RoomImg, rt.RoomDesc, r.Occupancy, COUNT(r.RoomNo) as AvailableCount
+                    SELECT r.RoomType, rt.RoomPrice, rt.RoomImg, rt.RoomDesc, r.Occupancy, 
+                           (COUNT(r.RoomNo) - ISNULL(MAX(b.BookedCount), 0)) as AvailableCount
                     FROM Room r
                     INNER JOIN RoomType rt ON r.RoomType = rt.RoomType
-                    WHERE r.RoomNo NOT IN (
-                        SELECT RoomNo FROM Booking 
-                        WHERE (ArrivalDate < @DepartureDate AND DepartureDate > @ArrivalDate)
-                    )
+                    LEFT JOIN (
+                        SELECT rm.RoomType, COUNT(*) as BookedCount
+                        FROM Booking bk
+                        INNER JOIN Room rm ON bk.RoomNo = rm.RoomNo
+                        WHERE (bk.ArrivalDate < @DepartureDate AND bk.DepartureDate > @ArrivalDate)
+                          AND bk.BookingStatus != 'Cancelled'
+                        GROUP BY rm.RoomType
+                    ) b ON r.RoomType = b.RoomType
+                    WHERE (r.RoomStatus IS NULL OR r.RoomStatus != 'Maintenance')
                     GROUP BY r.RoomType, rt.RoomPrice, rt.RoomImg, rt.RoomDesc, r.Occupancy
+                    HAVING (COUNT(r.RoomNo) - ISNULL(MAX(b.BookedCount), 0)) > 0
                 `);
             
             const availableRooms = result.recordset;
