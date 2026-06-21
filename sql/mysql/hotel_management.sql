@@ -108,7 +108,8 @@ CREATE TABLE Booking (
     NumAdults INT,
     NumChildren INT,
     SpecialReq NVARCHAR(MAX),
-    BookingStatus VARCHAR(50)
+    BookingStatus VARCHAR(50),
+    CancelReason NVARCHAR(MAX)
 );
 
 -- 9. Table Review
