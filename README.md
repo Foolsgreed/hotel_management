@@ -78,7 +78,7 @@ npm install
 **Bước 2: Cấu hình cơ sở dữ liệu**
 1. Mở Microsoft SQL Server Management Studio (SSMS).
 2. Chạy các script trong thư mục `sql/mysql/` theo thứ tự ưu tiên .
-3. Chỉnh sửa file `.envexe` ở thư mục gốc của dự án và điền thông tin
+3. Đổi tên file `.env.example` thành `.env` ở thư mục gốc của dự án và điền thông tin tương ứng.
 
 **Bước 3: Khởi chạy Server**
 ```bash
