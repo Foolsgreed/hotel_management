@@ -14,7 +14,7 @@ exports.createReview = async (req, res) => {
         if (error.message.includes('already reviewed')) {
             res.status(400).json({ error: error.message });
         } else {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ message: 'Internal Server Error' });
         }
     }
 };
@@ -25,7 +25,7 @@ exports.getLatestReviews = async (req, res) => {
         const reviews = await ReviewModel.getLatestReviews(limit);
         res.status(200).json(reviews);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -34,6 +34,6 @@ exports.getAverageRating = async (req, res) => {
         const rating = await ReviewModel.getAverageRating();
         res.status(200).json(rating);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };

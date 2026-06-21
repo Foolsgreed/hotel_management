@@ -1,5 +1,6 @@
 const GuestModel = require('../models/guestModel');
 const EmployeeModel = require('../models/employeeModel');
+const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
     try {
@@ -29,7 +30,12 @@ exports.login = async (req, res) => {
         // Try Employee first
         const employee = await EmployeeModel.login(email, password);
         if (employee) {
-            return res.status(200).json({ message: 'Login successful', role: 'admin', user: employee });
+            const token = jwt.sign(
+                { EmployeeID: employee.EmployeeID, RoleTitle: employee.RoleTitle, Permissions: employee.Permissions },
+                process.env.JWT_SECRET || 'hotel_secret_key_123',
+                { expiresIn: '8h' }
+            );
+            return res.status(200).json({ message: 'Login successful', role: 'admin', user: employee, token });
         }
         
         // Try Guest

@@ -1,3 +1,27 @@
+
+const originalFetch = window.fetch;
+window.fetch = async function() {
+    let [resource, config] = arguments;
+    if(typeof resource === 'string' && resource.startsWith('/api/')) {
+        if(!config) config = {};
+        if(!config.headers) config.headers = {};
+        const token = localStorage.getItem('token');
+        if(token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await originalFetch(resource, config);
+        if(response.status === 401) {
+            alert('Session expired. Please login again.');
+            localStorage.removeItem('employee');
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        }
+        return response;
+    }
+    return originalFetch.apply(this, arguments);
+};
+
 let emp;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -30,7 +54,8 @@ let emp;
             if (!canViewRevenue) document.getElementById('nav-revenue').style.display = 'none';
             if (!canManageEmployees) document.getElementById('nav-employees').style.display = 'none';
             
-            if (isAdmin || isManager) {
+            const hasPricingPerm = emp.Permissions && emp.Permissions.includes('manage_pricing');
+            if (hasPricingPerm) {
                 document.getElementById('manage-pricing-btn-container').style.display = 'block';
             } else {
                 document.getElementById('manage-pricing-btn-container').style.display = 'none';
@@ -85,8 +110,8 @@ let emp;
         async function loadRevenueDashboard() {
             try {
                 const [bookingsRes, billsRes] = await Promise.all([
-                    fetch(`/api/bookings?employeeId=${emp.EmployeeID}`),
-                    fetch(`/api/bills?employeeId=${emp.EmployeeID}`)
+                    fetch(`/api/bookings`),
+                    fetch(`/api/bills`)
                 ]);
                 
                 if (!bookingsRes.ok || !billsRes.ok) return;
@@ -196,16 +221,16 @@ let emp;
                 const res = await fetch(`/api/bookings/${id}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status, employeeId: emp.EmployeeID, cancelReason: reason })
+                    body: JSON.stringify({ status, cancelReason: reason })
                 });
-                if (res.ok) { fetchStatistics(); fetchBookings(); }
+                if (res.ok) { fetchBookings(); }
                 else { const err = await res.json(); alert(err.message || 'Failed to update status'); }
             } catch (error) { console.error(error); alert('Network error'); }
         }
 
         async function fetchBookings() {
             try {
-                const response = await fetch(`/api/bookings?employeeId=${emp.EmployeeID}`);
+                const response = await fetch(`/api/bookings`);
                 const bookings = await response.json();
                 const tbody = document.getElementById('bookings-tbody');
 
@@ -334,7 +359,6 @@ let emp;
                 
                 if (res.ok) {
                     document.getElementById('checkin-modal').style.display = 'none';
-                    fetchStatistics();
                     fetchBookings();
                 } else {
                     const err = await res.json();
@@ -368,7 +392,7 @@ let emp;
 
         async function fetchRooms() {
             try {
-                const response = await fetch(`/api/rooms/status?employeeId=${emp.EmployeeID}`);
+                const response = await fetch(`/api/rooms/status`);
                 const rooms = await response.json();
                 const tbody = document.getElementById('rooms-tbody');
 
@@ -428,7 +452,7 @@ let emp;
                 const res = await fetch(`/api/rooms/${roomNo}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status, employeeId: emp.EmployeeID })
+                    body: JSON.stringify({ status })
                 });
                 if (!res.ok) { 
                     const err = await res.json(); 
@@ -442,7 +466,7 @@ let emp;
         // ---------- BILLS ----------
         async function fetchBills() {
             try {
-                const response = await fetch(`/api/bills?employeeId=${emp.EmployeeID}`);
+                const response = await fetch(`/api/bills`);
                 const bills = await response.json();
                 const tbody = document.getElementById('bills-tbody');
 
@@ -527,7 +551,7 @@ let emp;
                 const res = await fetch(`/api/bills/pay/${invoiceNo}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ paymentMode: paymentMode, employeeId: emp.EmployeeID })
+                    body: JSON.stringify({ paymentMode: paymentMode })
                 });
                 if (res.ok) fetchBills();
                 else { const err = await res.json(); alert(err.message || 'Failed to update invoice'); }
@@ -537,7 +561,7 @@ let emp;
         // ---------- EMPLOYEES ----------
         async function fetchRoles() {
             try {
-                const response = await fetch(`/api/employees/roles?employeeId=${emp.EmployeeID}`);
+                const response = await fetch(`/api/employees/roles`);
                 if (!response.ok) return;
                 const roles = await response.json();
                 const select = document.getElementById('emp-role');
@@ -550,7 +574,7 @@ let emp;
 
         async function fetchEmployees() {
             try {
-                const response = await fetch(`/api/employees?employeeId=${emp.EmployeeID}`);
+                const response = await fetch(`/api/employees`);
                 const tbody = document.getElementById('employees-tbody');
                 if (response.status === 403) {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">You do not have permission to view this.</td></tr>';
@@ -608,8 +632,7 @@ let emp;
                 lastName: document.getElementById('emp-last-name').value,
                 email: document.getElementById('emp-email').value,
                 password: document.getElementById('emp-password').value,
-                roleId: document.getElementById('emp-role').value,
-                employeeId: emp.EmployeeID
+                roleId: document.getElementById('emp-role').value
             };
             try {
                 const res = await fetch('/api/employees', {
@@ -634,7 +657,7 @@ let emp;
                 const res = await fetch(`/api/employees/${id}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ employeeId: emp.EmployeeID, requesterRole: emp.RoleTitle })
+                    body: JSON.stringify({ requesterRole: emp.RoleTitle })
                 });
                 if (res.ok) fetchEmployees();
                 else {
@@ -731,7 +754,7 @@ let emp;
                     document.getElementById('walkin-form').reset();
                     document.getElementById('walkin-room-select').innerHTML = '<div style="color:#ccc; grid-column: 1 / -1;">Select dates first</div>';
                     fetchBookings();
-                    fetchStatistics();
+                    
                 } else {
                     const err = await res.json();
                     alert(err.message || 'Failed to create booking');

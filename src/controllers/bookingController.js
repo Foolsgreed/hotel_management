@@ -28,7 +28,7 @@ exports.createWalkinBooking = async (req, res) => {
         res.status(201).json({ message: 'Walkin booking created successfully', invoiceNo: invoiceNo });
     } catch (error) {
         console.error("Error creating walkin booking:", error);
-        res.status(500).json({ message: error.message || 'Internal Server Error' });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -44,7 +44,7 @@ exports.createBookingOrder = async (req, res) => {
         res.status(201).json({ message: 'Booking order created successfully', invoiceNo: invoiceNo });
     } catch (error) {
         console.error("Error creating booking order:", error);
-        res.status(500).json({ message: error.message || 'Internal Server Error' });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -150,6 +150,6 @@ exports.checkInBooking = async (req, res) => {
         else res.status(400).json({ message: 'Failed to check in' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: error.message || 'Server error' });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };

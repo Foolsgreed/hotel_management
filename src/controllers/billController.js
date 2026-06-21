@@ -5,7 +5,7 @@ exports.getAllBills = async (req, res) => {
         const bills = await BillModel.getAllBills();
         res.status(200).json(bills);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -15,7 +15,7 @@ exports.getBillsByGuest = async (req, res) => {
         const bills = await BillModel.getBillsByGuest(guestId);
         res.status(200).json(bills);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 

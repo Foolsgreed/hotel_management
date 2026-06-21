@@ -54,11 +54,12 @@ class RoomModel {
                     FROM Room r
                     INNER JOIN RoomType rt ON r.RoomType = rt.RoomType
                     LEFT JOIN (
-                        SELECT RoomType, COUNT(*) as BookedCount
-                        FROM Booking
-                        WHERE (ArrivalDate < @DepartureDate AND DepartureDate > @ArrivalDate)
-                          AND BookingStatus != 'Cancelled'
-                        GROUP BY RoomType
+                        SELECT rm.RoomType, COUNT(*) as BookedCount
+                        FROM Booking bk
+                        INNER JOIN Room rm ON bk.RoomNo = rm.RoomNo
+                        WHERE (bk.ArrivalDate < @DepartureDate AND bk.DepartureDate > @ArrivalDate)
+                          AND bk.BookingStatus != 'Cancelled'
+                        GROUP BY rm.RoomType
                     ) b ON r.RoomType = b.RoomType
                     WHERE (r.RoomStatus IS NULL OR r.RoomStatus != 'Maintenance')
                     GROUP BY r.RoomType, rt.RoomPrice, rt.RoomImg, rt.RoomDesc, r.Occupancy

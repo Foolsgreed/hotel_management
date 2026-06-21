@@ -70,7 +70,7 @@ exports.addEmployee = async (req, res) => {
 exports.deleteEmployee = async (req, res) => {
     try {
         const { id } = req.params;
-        const { requesterRole } = req.body;
+        const requesterRole = req.user.RoleTitle;
         
         const pool = await poolPromise;
 

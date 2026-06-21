@@ -109,7 +109,8 @@ CREATE TABLE Booking (
     NumChildren INT,
     SpecialReq NVARCHAR(MAX),
     BookingStatus VARCHAR(50),
-    CancelReason NVARCHAR(MAX)
+    CancelReason NVARCHAR(MAX),
+    RoomType VARCHAR(50) FOREIGN KEY REFERENCES RoomType(RoomType)
 );
 
 -- 9. Table Review
