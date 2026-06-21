@@ -80,15 +80,22 @@ npm install
 2. Chạy các script trong thư mục `sql/mysql/` theo thứ tự ưu tiên .
 3. Đổi tên file `.env.example` thành `.env` ở thư mục gốc của dự án và điền thông tin tương ứng.
 
-**Bước 3: Khởi chạy Server**
+**Bước 3: Tạo tài khoản Admin (Seed Data)**
+Vì mật khẩu được mã hóa bảo mật, bạn cần chạy script sau để tạo tài khoản Admin mặc định:
 ```bash
-node src/server.js
-# Hoặc npm start (nếu đã cấu hình trong package.json)
+node src/utils/seed_admin.js
 ```
 
-**Bước 4: Trải nghiệm hệ thống**
+**Bước 4: Khởi chạy Server**
+```bash
+node src/server.js
+# Hoặc npm start (vì đã cấu hình trong package.json)
+```
+
+**Bước 5: Trải nghiệm hệ thống**
 Mở trình duyệt và truy cập: `http://localhost:3000`
-TK Admin: admin@hotel.com, mk:123456
+- **Tài khoản Admin:** `admin@grandpalace.com`
+- **Mật khẩu:** `admin123`
 
 ### 2.6 Hạn chế hiện tại
 * Chưa tích hợp cổng thanh toán trực tuyến thực tế (Stripe, VNPay, Momo).
