@@ -15,4 +15,7 @@ router.post('/', verifyToken, checkPermission('manage_employees'), employeeContr
 // DELETE /api/employees/:id
 router.delete('/:id', verifyToken, checkPermission('manage_employees'), employeeController.deleteEmployee);
 
+// PUT /api/employees/:id
+router.put('/:id', verifyToken, checkPermission('manage_employees'), employeeController.updateEmployee);
+
 module.exports = router;

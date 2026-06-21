@@ -6,7 +6,7 @@ class RoomModel {
             const pool = await poolPromise;
             // JOIN Room and RoomType to get complete info
             const result = await pool.request().query(`
-                SELECT r.RoomNo, r.Occupancy, rt.RoomType, rt.RoomPrice, rt.RoomImg, rt.RoomDesc, h.HotelName
+                SELECT r.RoomNo, r.Occupancy, rt.RoomType, rt.RoomPrice, rt.RoomImg, rt.RoomDesc, h.HotelName, r.RoomStatus
                 FROM Room r
                 INNER JOIN RoomType rt ON r.RoomType = rt.RoomType
                 INNER JOIN Hotel h ON r.HotelCode = h.HotelCode

@@ -24,6 +24,13 @@ class ReviewModel {
                     OUTPUT INSERTED.ReviewID
                     VALUES (@GuestID, @InvoiceNo, @Rating, @Comment, GETDATE())
                 `);
+                
+            // Update the Hotel StarRating based on the new average
+            await pool.request().query(`
+                UPDATE Hotel 
+                SET StarRating = (SELECT ROUND(AVG(CAST(Rating AS FLOAT)), 1) FROM Review)
+            `);
+                
             return result.recordset[0];
         } catch (error) {
             throw error;

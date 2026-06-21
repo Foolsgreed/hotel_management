@@ -565,13 +565,17 @@ let emp;
                 if (!response.ok) return;
                 const roles = await response.json();
                 const select = document.getElementById('emp-role');
+                const editSelect = document.getElementById('edit-emp-role');
                 select.innerHTML = '<option value="">Select Role...</option>';
+                editSelect.innerHTML = '<option value="">Select Role...</option>';
                 roles.forEach(r => {
                     select.innerHTML += `<option value="${r.RoleID}" style="color:#000;">${r.RoleTitle}</option>`;
+                    editSelect.innerHTML += `<option value="${r.RoleID}" style="color:#000;">${r.RoleTitle}</option>`;
                 });
             } catch (err) { console.error(err); }
         }
 
+        let allEmployeesData = [];
         async function fetchEmployees() {
             try {
                 const response = await fetch(`/api/employees`);
@@ -581,6 +585,7 @@ let emp;
                     return;
                 }
                 const employees = await response.json();
+                allEmployeesData = employees;
                 tbody.innerHTML = '';
                 const groupedEmployees = {};
                 employees.forEach(e => {
@@ -600,15 +605,22 @@ let emp;
                 for (const [role, emps] of sortedEntries) {
                     tbody.innerHTML += `<tr><td colspan="5" style="background:#2d3748; color:#a0aec0; font-weight:bold; padding:10px;">${role}</td></tr>`;
                     emps.forEach(e => {
-                        let deleteBtn = '-';
+                        let actionBtns = '-';
                         if (e.EmployeeID != 1) { 
                             if (e.RoleTitle === 'Manager' && emp.RoleTitle !== 'Admin') {
-                                // Manager cannot delete another Manager
+                                // Manager cannot edit/delete another Manager
                             } else if (e.RoleTitle === 'Admin' && emp.RoleTitle !== 'Admin') {
-                                // Manager cannot delete Admin
+                                // Manager cannot edit/delete Admin
                             } else {
-                                deleteBtn = `<button class="btn-action btn-cancel" onclick="deleteEmployee(${e.EmployeeID})">Delete</button>`;
+                                actionBtns = `
+                                    <button class="btn-action" style="background:rgba(243, 156, 18, 0.2); color:#f39c12; border:1px solid rgba(243, 156, 18, 0.4);" onclick="openEditEmployee(${e.EmployeeID})">Edit</button>
+                                    <button class="btn-action btn-cancel" onclick="deleteEmployee(${e.EmployeeID})">Delete</button>
+                                `;
                             }
+                        } else if (emp.RoleTitle === 'Admin') {
+                            actionBtns = `
+                                <button class="btn-action" style="background:rgba(243, 156, 18, 0.2); color:#f39c12; border:1px solid rgba(243, 156, 18, 0.4);" onclick="openEditEmployee(${e.EmployeeID})">Edit</button>
+                            `;
                         }
 
                         tbody.innerHTML += `
@@ -617,7 +629,7 @@ let emp;
                                 <td>${e.FirstName} ${e.LastName}</td>
                                 <td>${e.Email}</td>
                                 <td><span class="room-status-badge status-occupied">${e.RoleTitle}</span></td>
-                                <td>${deleteBtn}</td>
+                                <td>${actionBtns}</td>
                             </tr>
                         `;
                     });
@@ -631,8 +643,13 @@ let emp;
                 firstName: document.getElementById('emp-first-name').value,
                 lastName: document.getElementById('emp-last-name').value,
                 email: document.getElementById('emp-email').value,
+                phoneNo: document.getElementById('emp-phone').value,
+                dob: document.getElementById('emp-dob').value,
+                gender: document.getElementById('emp-gender').value,
+                salary: document.getElementById('emp-salary').value,
                 password: document.getElementById('emp-password').value,
-                roleId: document.getElementById('emp-role').value
+                roleId: document.getElementById('emp-role').value,
+                hotelCode: document.getElementById('emp-hotel-code').value
             };
             try {
                 const res = await fetch('/api/employees', {
@@ -647,6 +664,64 @@ let emp;
                 } else {
                     const err = await res.json();
                     alert(err.message || 'Failed to add employee');
+                }
+            } catch (err) { console.error(err); alert('Network error'); }
+        });
+        
+        function openEditEmployee(id) {
+            const e = allEmployeesData.find(x => x.EmployeeID === id);
+            if (!e) return;
+            document.getElementById('edit-emp-id').value = e.EmployeeID;
+            document.getElementById('edit-emp-first-name').value = e.FirstName || '';
+            document.getElementById('edit-emp-last-name').value = e.LastName || '';
+            document.getElementById('edit-emp-email').value = e.Email || '';
+            document.getElementById('edit-emp-phone').value = e.PhoneNo || '';
+            
+            const dobInput = document.getElementById('edit-emp-dob');
+            if (e.DOB) {
+                dobInput.type = 'date';
+                dobInput.value = new Date(e.DOB).toISOString().split('T')[0];
+            } else {
+                dobInput.type = 'text';
+                dobInput.value = '';
+            }
+
+            document.getElementById('edit-emp-gender').value = e.Gender || '';
+            document.getElementById('edit-emp-salary').value = e.Salary || '';
+            document.getElementById('edit-emp-role').value = e.RoleID || '';
+            document.getElementById('edit-emp-hotel-code').value = e.HotelCode || 1;
+            document.getElementById('edit-employee-modal').style.display = 'flex';
+        }
+
+        document.getElementById('edit-employee-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-emp-id').value;
+            const data = {
+                firstName: document.getElementById('edit-emp-first-name').value,
+                lastName: document.getElementById('edit-emp-last-name').value,
+                email: document.getElementById('edit-emp-email').value,
+                phoneNo: document.getElementById('edit-emp-phone').value,
+                dob: document.getElementById('edit-emp-dob').value,
+                gender: document.getElementById('edit-emp-gender').value,
+                salary: document.getElementById('edit-emp-salary').value,
+                roleId: document.getElementById('edit-emp-role').value,
+                hotelCode: document.getElementById('edit-emp-hotel-code').value
+            };
+            try {
+                const res = await fetch(`/api/employees/${id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    document.getElementById('edit-employee-modal').style.display = 'none';
+                    fetchEmployees();
+                } else {
+                    const err = await res.json();
+                    alert(err.message || 'Failed to update employee');
                 }
             } catch (err) { console.error(err); alert('Network error'); }
         });

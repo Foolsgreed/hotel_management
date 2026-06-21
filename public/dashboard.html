@@ -311,10 +311,20 @@
                         <input type="text" id="emp-first-name" placeholder="First Name" required style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
                         <input type="text" id="emp-last-name" placeholder="Last Name" required style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
                         <input type="email" id="emp-email" placeholder="Email" required style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                        <input type="text" id="emp-phone" placeholder="Phone No" style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                        <input type="text" id="emp-dob" placeholder="Date of Birth" onfocus="(this.type='date')" onblur="(if(!this.value) this.type='text')" style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                        <select id="emp-gender" style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                            <option value="">Select Gender...</option>
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                            <option value="O">Other</option>
+                        </select>
+                        <input type="number" id="emp-salary" placeholder="Salary" step="0.01" style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
                         <input type="password" id="emp-password" placeholder="Password" required style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
                         <select id="emp-role" required style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
                             <option value="">Select Role...</option>
                         </select>
+                        <input type="hidden" id="emp-hotel-code" value="1">
                         <div style="grid-column: span 2; display:flex; gap:1rem; justify-content:flex-end;">
                             <button type="button" class="btn-action btn-cancel" onclick="document.getElementById('add-employee-form-container').style.display='none'" style="padding: 0.5rem 1rem;">Cancel</button>
                             <button type="submit" class="btn-action" style="background:var(--primary); color:#000; font-weight:bold; padding: 0.5rem 1rem;">Save</button>
@@ -339,7 +349,7 @@
         </main>
     </div>
 
-    <script src="/js/dashboard.js"></script>
+    <!-- Scripts moved to bottom -->
     
 <!-- View Booking Details Modal -->
                 <div id="booking-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
@@ -407,5 +417,37 @@
                     </div>
                 </div>
 
-                </body>
+                <!-- Edit Employee Modal -->
+                <div id="edit-employee-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
+                    <div style="background:var(--bg-light); border:1px solid var(--glass-border); padding:2rem; border-radius:12px; max-width:600px; width:90%;">
+                        <h2 style="color:#fff; margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:0.5rem;">Edit Employee</h2>
+                        <form id="edit-employee-form" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                            <input type="hidden" id="edit-emp-id">
+                            <input type="text" id="edit-emp-first-name" placeholder="First Name" required style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                            <input type="text" id="edit-emp-last-name" placeholder="Last Name" required style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                            <input type="email" id="edit-emp-email" placeholder="Email" required style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                            <input type="text" id="edit-emp-phone" placeholder="Phone No" style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                            <input type="text" id="edit-emp-dob" placeholder="Date of Birth" onfocus="(this.type='date')" onblur="(if(!this.value) this.type='text')" style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                            <select id="edit-emp-gender" style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                                <option value="">Select Gender...</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                                <option value="O">Other</option>
+                            </select>
+                            <input type="number" id="edit-emp-salary" placeholder="Salary" step="0.01" style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                            <select id="edit-emp-role" required style="padding:0.5rem; border-radius:4px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:#fff;">
+                                <option value="">Select Role...</option>
+                            </select>
+                            <input type="hidden" id="edit-emp-hotel-code" value="1">
+                            
+                            <div style="grid-column: span 2; display:flex; gap:1rem; justify-content:flex-end; margin-top: 1rem;">
+                                <button type="button" class="btn-action btn-cancel" onclick="document.getElementById('edit-employee-modal').style.display='none'" style="padding: 0.5rem 1rem;">Cancel</button>
+                                <button type="submit" class="btn-action" style="background:var(--primary); color:#000; font-weight:bold; padding: 0.5rem 1rem;">Update</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
 </html>

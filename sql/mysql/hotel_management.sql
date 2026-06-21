@@ -51,7 +51,7 @@ CREATE TABLE Room (
     HotelCode INT FOREIGN KEY REFERENCES Hotel(HotelCode),
     Occupancy INT,
     FloorNo INT,
-    RoomStatus VARCHAR(50)
+    RoomStatus VARCHAR(50) DEFAULT 'Available'
 );
 
 -- 5. Table Employee
