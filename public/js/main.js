@@ -300,7 +300,8 @@ async function loadLatestReviews() {
     if (!container) return;
 
     try {
-        const res = await fetch('/api/reviews/latest?limit=6');
+        // Fetch more reviews to have a good marquee length
+        const res = await fetch('/api/reviews/latest?limit=10');
         if (!res.ok) throw new Error('Failed to fetch reviews');
         const reviews = await res.json();
         
@@ -323,27 +324,27 @@ async function loadLatestReviews() {
             return;
         }
 
+        // Build HTML string for cards
+        let htmlStr = '';
         reviews.forEach(review => {
             const stars = '★'.repeat(review.Rating) + '☆'.repeat(5 - review.Rating);
             const date = new Date(review.ReviewDate).toLocaleDateString('en-US');
             
-            const card = document.createElement('div');
-            card.className = 'review-card';
-            card.style.background = 'rgba(255,255,255,0.05)';
-            card.style.padding = '1.5rem';
-            card.style.borderRadius = '10px';
-            card.style.border = '1px solid rgba(255,255,255,0.1)';
-            
-            card.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h4 style="color: #fff; margin: 0;">${review.FirstName} ${review.LastName}</h4>
-                    <span style="color: #ffd700; font-size: 1.2rem;">${stars}</span>
+            htmlStr += `
+                <div class="review-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="color: #fff; margin: 0;">${review.FirstName} ${review.LastName}</h4>
+                        <span style="color: #ffd700; font-size: 1.2rem;">${stars}</span>
+                    </div>
+                    <p style="color: #ccc; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;">"${review.Comment}"</p>
+                    <div style="color: #888; font-size: 0.8rem; text-align: right;">Posted on: ${date}</div>
                 </div>
-                <p style="color: #ccc; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;">"${review.Comment}"</p>
-                <div style="color: #888; font-size: 0.8rem; text-align: right;">Posted on: ${date}</div>
             `;
-            container.appendChild(card);
         });
+
+        // Duplicate the reviews to create a seamless infinite scrolling effect
+        container.innerHTML = htmlStr + htmlStr;
+
     } catch (e) {
         console.error(e);
         container.innerHTML = '<p style="color:red; text-align:center; width:100%;">Error loading reviews.</p>';

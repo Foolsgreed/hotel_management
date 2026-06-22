@@ -221,7 +221,7 @@
         </div>
     </section>
 
-    <section id="reviews" class="reviews-section" style="padding: 5rem 10%; background: #1a1c23;">
+    <section id="reviews" class="reviews-section" style="padding: 5rem 0; background: #1a1c23; overflow: hidden;">
         <div class="section-title">
             <h2 style="color: #fff; text-align: center; margin-bottom: 0.5rem; font-size: 2.5rem;">
                 What Our Guests Say
@@ -229,8 +229,10 @@
             </h2>
             <p style="color: #aaa; text-align: center; margin-bottom: 3rem;">Real experiences from guests who have stayed at the Grand Palace.</p>
         </div>
-        <div class="reviews-grid" id="reviews-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-            <!-- Injected by JS -->
+        <div class="marquee-wrapper">
+            <div class="marquee-content" id="reviews-container">
+                <!-- Injected by JS -->
+            </div>
         </div>
     </section>
 
