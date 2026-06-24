@@ -95,16 +95,33 @@ function initSearchBar() {
     const today = new Date();
     const tomorrow = new Date();
     tomorrow.setDate(today.getDate() + 1);
+    const nextYear = new Date();
+    nextYear.setFullYear(today.getFullYear() + 1);
 
-    arrivalInput.value = today.toISOString().split('T')[0];
-    departureInput.value = tomorrow.toISOString().split('T')[0];
+    const todayStr = today.toISOString().split('T')[0];
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    
+    arrivalInput.value = todayStr;
+    departureInput.value = tomorrowStr;
 
-    // Ensure departure > arrival
-    arrivalInput.addEventListener('change', () => {
-        if (departureInput.value <= arrivalInput.value) {
-            let nextDay = new Date(arrivalInput.value);
-            nextDay.setDate(nextDay.getDate() + 1);
-            departureInput.value = nextDay.toISOString().split('T')[0];
+    // Initialize Flatpickr
+    flatpickr("#date-range-picker", {
+        mode: "range",
+        minDate: "today",
+        maxDate: nextYear,
+        showMonths: 2,
+        dateFormat: "Y-m-d",
+        defaultDate: [todayStr, tomorrowStr],
+        onChange: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length === 2) {
+                // Formatting back to YYYY-MM-DD for consistency and API expectations
+                // By default flatpickr uses local timezone so formatting this way avoids off-by-one errors
+                const arr = new Date(selectedDates[0].getTime() - (selectedDates[0].getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                const dep = new Date(selectedDates[1].getTime() - (selectedDates[1].getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                
+                arrivalInput.value = arr;
+                departureInput.value = dep;
+            }
         }
     });
 
@@ -112,6 +129,17 @@ function initSearchBar() {
         e.preventDefault();
         const arrivalDate = arrivalInput.value;
         const departureDate = departureInput.value;
+
+        if (!arrivalDate || !departureDate || arrivalDate === departureDate) {
+            alert('Please select a valid date range (check-in and check-out)!');
+            return;
+        }
+
+        if (departureDate <= arrivalDate) {
+            alert('Departure date must be after arrival date!');
+            return;
+        }
+
         const guests = window.guestCounts.adults + window.guestCounts.children;
         await searchRooms(arrivalDate, departureDate, guests);
     });
@@ -272,7 +300,8 @@ async function loadLatestReviews() {
     if (!container) return;
 
     try {
-        const res = await fetch('/api/reviews/latest?limit=6');
+        // Fetch more reviews to have a good marquee length
+        const res = await fetch('/api/reviews/latest?limit=10');
         if (!res.ok) throw new Error('Failed to fetch reviews');
         const reviews = await res.json();
         
@@ -295,27 +324,27 @@ async function loadLatestReviews() {
             return;
         }
 
+        // Build HTML string for cards
+        let htmlStr = '';
         reviews.forEach(review => {
             const stars = '★'.repeat(review.Rating) + '☆'.repeat(5 - review.Rating);
             const date = new Date(review.ReviewDate).toLocaleDateString('en-US');
             
-            const card = document.createElement('div');
-            card.className = 'review-card';
-            card.style.background = 'rgba(255,255,255,0.05)';
-            card.style.padding = '1.5rem';
-            card.style.borderRadius = '10px';
-            card.style.border = '1px solid rgba(255,255,255,0.1)';
-            
-            card.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h4 style="color: #fff; margin: 0;">${review.FirstName} ${review.LastName}</h4>
-                    <span style="color: #ffd700; font-size: 1.2rem;">${stars}</span>
+            htmlStr += `
+                <div class="review-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="color: #fff; margin: 0;">${review.FirstName} ${review.LastName}</h4>
+                        <span style="color: #ffd700; font-size: 1.2rem;">${stars}</span>
+                    </div>
+                    <p style="color: #ccc; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;">"${review.Comment}"</p>
+                    <div style="color: #888; font-size: 0.8rem; text-align: right;">Posted on: ${date}</div>
                 </div>
-                <p style="color: #ccc; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;">"${review.Comment}"</p>
-                <div style="color: #888; font-size: 0.8rem; text-align: right;">Posted on: ${date}</div>
             `;
-            container.appendChild(card);
         });
+
+        // Duplicate the reviews to create a seamless infinite scrolling effect
+        container.innerHTML = htmlStr + htmlStr;
+
     } catch (e) {
         console.error(e);
         container.innerHTML = '<p style="color:red; text-align:center; width:100%;">Error loading reviews.</p>';

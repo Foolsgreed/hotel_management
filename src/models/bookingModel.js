@@ -4,6 +4,7 @@ class BookingModel {
     static async getAllBookings() {
         try {
             const pool = await poolPromise;
+            // Lấy danh sách toàn bộ các Đơn đặt phòng (Booking) kết hợp với thông tin khách (Guest) và phòng (Room). Nhóm lại theo Mã hóa đơn (InvoiceNo) để hiển thị gọn gàng trên bảng Quản lý.
             const result = await pool.request().query(`
                 SELECT 
                     COALESCE(b.InvoiceNo, b.BookingID) AS BookingID, 
@@ -38,7 +39,7 @@ class BookingModel {
     static async createBooking(guestID, roomType, arrivalDate, departureDate) {
         try {
             const pool = await poolPromise;
-            
+
             // Find a room of this type that is NOT booked during these dates
             const roomQuery = await pool.request()
                 .input('RoomType', roomType)
@@ -86,7 +87,7 @@ class BookingModel {
             const pool = await poolPromise;
             const transaction = pool.transaction();
             await transaction.begin();
-            
+
             try {
                 let updateQuery = `
                     UPDATE Booking
@@ -100,13 +101,13 @@ class BookingModel {
                 const request = transaction.request()
                     .input('InvoiceNo', invoiceNo)
                     .input('Status', status);
-                
+
                 if (status === 'Cancelled' && cancelReason) {
                     request.input('CancelReason', cancelReason);
                 }
 
                 const result = await request.query(updateQuery);
-                
+
                 if (status === 'CheckedOut') {
                     await transaction.request()
                         .input('InvoiceNo', invoiceNo)
@@ -130,7 +131,7 @@ class BookingModel {
                             )
                         `);
                 }
-                
+
                 await transaction.commit();
                 return result.rowsAffected[0] > 0;
             } catch (err) {
@@ -146,6 +147,7 @@ class BookingModel {
         try {
             const pool = await poolPromise;
             // Get stats for current month based on BookingDate
+            // Thống kê số liệu tháng hiện tại: Tổng số lượng đơn, số đơn đã hủy (Cancelled) và số đơn thành công (CheckedOut) để vẽ biểu đồ Dashboard.
             const result = await pool.request().query(`
                 SELECT 
                     COUNT(DISTINCT InvoiceNo) as TotalBookings,
@@ -155,7 +157,8 @@ class BookingModel {
                 WHERE MONTH(BookingDate) = MONTH(GETDATE()) 
                   AND YEAR(BookingDate) = YEAR(GETDATE())
             `);
-            
+
+            // Tính tổng doanh thu (TotalRevenue) từ tất cả các hóa đơn (Bill) có trạng thái đã thanh toán (Paid).
             const revenueResult = await pool.request().query(`
                 SELECT SUM(TotalAmount) as TotalRevenue
                 FROM Bill
@@ -167,7 +170,7 @@ class BookingModel {
             const cancelled = row.Cancelled || 0;
             const checkedOut = row.CheckedOut || 0;
             const rate = total > 0 ? Math.round((cancelled / total) * 100) : 0;
-            
+
             return {
                 TotalBookings: total,
                 Cancelled: cancelled,
@@ -187,7 +190,7 @@ class BookingModel {
             await transaction.begin();
 
             try {
-                // 1. Create Bill immediately to get InvoiceNo
+                // Tạo trước một Hóa đơn (Bill) rỗng với tổng tiền bằng 0 để lấy mã InvoiceNo tự tăng. Mã này dùng để gộp nhiều phòng khách đặt vào chung một hóa đơn.
                 const billResult = await transaction.request()
                     .input('GuestID', guestID)
                     .query(`
@@ -214,14 +217,14 @@ class BookingModel {
                                   AND BookingStatus != 'Cancelled'
                             )
                         `);
-                    
+
                     const availableCount = countQuery.recordset[0].AvailableCount;
                     if (availableCount < part.count) {
                         // We also need to subtract unassigned rooms of this type!
                         // Actually, a simpler way is to just let them book if there's inventory.
                         throw new Error(`Not enough ${part.type} rooms available.`);
                     }
-                    
+
                     const hotelCode = countQuery.recordset[0].HotelCode || 1;
 
                     // Additionally, count how many UNASSIGNED bookings exist for this room type during these dates
@@ -236,7 +239,7 @@ class BookingModel {
                               AND ArrivalDate < @DepartureDate AND DepartureDate > @ArrivalDate
                               AND BookingStatus != 'Cancelled'
                         `);
-                    
+
                     const unassignedCount = unassignedQuery.recordset[0].UnassignedCount;
                     if (availableCount - unassignedCount < part.count) {
                         throw new Error(`Not enough ${part.type} rooms available (some are pending assignment).`);
@@ -253,6 +256,7 @@ class BookingModel {
                             .input('NumAdults', numAdults)
                             .input('NumChildren', numChildren)
                             .input('SpecialReq', specialReq || null)
+                            // Thêm từng phòng khách đã chọn vào bảng Booking, tất cả đều được gán chung cái InvoiceNo vừa tạo phía trên. Trạng thái ban đầu là 'Pending' (chưa xếp số phòng cụ thể).
                             .query(`
                                 INSERT INTO Booking (HotelCode, GuestID, RoomNo, RoomType, InvoiceNo, BookingDate, BookingTime, ArrivalDate, DepartureDate, NumAdults, NumChildren, SpecialReq, BookingStatus)
                                 VALUES (@HotelCode, @GuestID, NULL, @RoomType, @InvoiceNo, CAST(GETDATE() AS DATE), CAST(GETDATE() AS TIME), @ArrivalDate, @DepartureDate, @NumAdults, @NumChildren, @SpecialReq, 'Pending')
@@ -261,6 +265,7 @@ class BookingModel {
                 }
 
                 // 3. Update Bill TotalAmount
+                // Cập nhật lại Tổng tiền (TotalAmount) của hóa đơn (Bill) sau khi đã nhân Giá phòng với Số đêm ở của toàn bộ các phòng nằm trong InvoiceNo đó.
                 await transaction.request()
                     .input('InvoiceNo', invoiceNo)
                     .query(`
@@ -322,11 +327,11 @@ class BookingModel {
                                   AND BookingStatus != 'Cancelled'
                             )
                         `);
-                    
+
                     if (roomInfoQuery.recordset.length === 0) {
                         throw new Error(`Room ${roomNo} is not available for the selected dates.`);
                     }
-                    
+
                     const roomInfo = roomInfoQuery.recordset[0];
 
                     await transaction.request()
@@ -524,10 +529,10 @@ class BookingModel {
                     const roomTypeRes = await transaction.request()
                         .input('RoomNo', assignment.roomNo)
                         .query(`SELECT RoomType FROM Room WHERE RoomNo = @RoomNo`);
-                    
+
                     const newRoomType = roomTypeRes.recordset[0] ? roomTypeRes.recordset[0].RoomType : null;
 
-                    const updateQuery = newRoomType 
+                    const updateQuery = newRoomType
                         ? `UPDATE Booking SET RoomNo = @RoomNo, RoomType = @RoomType WHERE BookingID = @BookingID`
                         : `UPDATE Booking SET RoomNo = @RoomNo WHERE BookingID = @BookingID`;
 
@@ -539,7 +544,7 @@ class BookingModel {
 
                     await req.query(updateQuery);
                 }
-                
+
                 // Update Booking Status
                 await transaction.request()
                     .input('InvoiceNo', invoiceNo)
@@ -577,7 +582,7 @@ class BookingModel {
                         SET TotalAmount = @TotalAmount
                         WHERE InvoiceNo = @InvoiceNo;
                     `);
-                
+
                 await transaction.commit();
                 return true;
             } catch (error) {

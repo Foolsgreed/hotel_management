@@ -9,8 +9,9 @@ class GuestModel {
             // Basic validation
             const check = await pool.request()
                 .input('Email', email)
+                // Kiểm tra xem địa chỉ email này đã được ai đó đăng ký trong hệ thống chưa.
                 .query('SELECT GuestID FROM Guest WHERE Email = @Email');
-            
+
             if (check.recordset.length > 0) {
                 throw new Error('Email already exists');
             }
@@ -24,6 +25,7 @@ class GuestModel {
                 .input('Email', email)
                 .input('Password', hashedPassword)
                 .input('PhoneNo', phoneNo)
+                // Lưu thông tin hồ sơ của khách hàng mới đăng ký tài khoản vào bảng Guest.
                 .query(`
                     INSERT INTO Guest (FirstName, LastName, Email, Password, PhoneNo)
                     OUTPUT INSERTED.GuestID, INSERTED.Email, INSERTED.FirstName, INSERTED.LastName, INSERTED.PhoneNo, INSERTED.DOB, INSERTED.Gender, INSERTED.PassportNo
@@ -41,12 +43,13 @@ class GuestModel {
             const pool = await poolPromise;
             const result = await pool.request()
                 .input('Email', email)
+                // Truy xuất toàn bộ thông tin khách hàng
                 .query('SELECT GuestID, FirstName, LastName, Email, Password, PhoneNo, DOB, Gender, PassportNo FROM Guest WHERE Email = @Email');
-            
+
             if (result.recordset.length === 0) {
                 return null;
             }
-            
+
             const guest = result.recordset[0];
             const isValid = await bcrypt.compare(password, guest.Password);
             if (!isValid) return null;
@@ -63,6 +66,7 @@ class GuestModel {
             const pool = await poolPromise;
             const result = await pool.request()
                 .input('Email', email)
+                // Lấy thông tin hồ sơ cá nhân của khách hàng qua Email
                 .query('SELECT GuestID, FirstName, LastName, Email, PhoneNo, DOB, Gender, PassportNo FROM Guest WHERE Email = @Email');
             return result.recordset.length > 0 ? result.recordset[0] : null;
         } catch (error) {
@@ -73,7 +77,7 @@ class GuestModel {
     static async updateGuest(guestId, data) {
         try {
             const pool = await poolPromise;
-            
+
             let query = `
                 UPDATE Guest
                 SET FirstName = @FirstName,
@@ -83,7 +87,7 @@ class GuestModel {
                     Gender = @Gender,
                     PassportNo = @PassportNo
             `;
-            
+
             const req = pool.request()
                 .input('GuestID', guestId)
                 .input('FirstName', data.FirstName)
@@ -99,8 +103,9 @@ class GuestModel {
                 WHERE GuestID = @GuestID
             `;
 
+            // Cập nhật các thay đổi về thông tin cá nhân của khách hàng vào database.
             const result = await req.query(query);
-            
+
             if (result.recordset.length === 0) {
                 throw new Error('Guest not found');
             }
@@ -113,36 +118,38 @@ class GuestModel {
     static async changePassword(guestId, currentPassword, newPassword) {
         try {
             const pool = await poolPromise;
-            
+
             // Get current password hash
             const getResult = await pool.request()
                 .input('GuestID', guestId)
+                // BÁO CÁO: Lấy mật khẩu cũ (đã mã hóa) ra để đối chiếu trước khi cho phép khách hàng đổi sang mật khẩu mới.
                 .query('SELECT Password FROM Guest WHERE GuestID = @GuestID');
-                
+
             if (getResult.recordset.length === 0) {
                 throw new Error('Guest not found');
             }
-            
+
             const hashedCurrentPassword = getResult.recordset[0].Password;
-            
+
             const bcrypt = require('bcryptjs');
             const isMatch = await bcrypt.compare(currentPassword, hashedCurrentPassword);
             if (!isMatch) {
                 throw new Error('Incorrect current password');
             }
-            
+
             const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-            
+
             const updateResult = await pool.request()
                 .input('GuestID', guestId)
                 .input('Password', hashedNewPassword)
+                // BÁO CÁO: Lưu mật khẩu mới của khách hàng vào hệ thống.
                 .query(`
                     UPDATE Guest
                     SET Password = @Password
                     OUTPUT INSERTED.GuestID, INSERTED.Email, INSERTED.FirstName, INSERTED.LastName, INSERTED.PhoneNo, INSERTED.DOB, INSERTED.Gender, INSERTED.PassportNo
                     WHERE GuestID = @GuestID
                 `);
-                
+
             return updateResult.recordset[0];
         } catch (error) {
             console.error("GuestModel.changePassword Error:", error);

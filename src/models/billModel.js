@@ -6,6 +6,7 @@ class BillModel {
             const pool = await poolPromise;
             const result = await pool.request()
                 .input('GuestID', guestId)
+                // Lấy danh sách các hóa đơn của một khách hàng cụ thể kèm theo nội dung đánh giá (nếu có).
                 .query(`
                     SELECT 
                         b.InvoiceNo, 
@@ -36,6 +37,7 @@ class BillModel {
         try {
             const pool = await poolPromise;
             const result = await pool.request()
+                // Lấy danh sách toàn bộ các hóa đơn hợp lệ trên toàn hệ thống để hiển thị lên bảng quản lý hóa đơn của Lễ tân.
                 .query(`
                     SELECT 
                         b.InvoiceNo,
@@ -67,6 +69,7 @@ class BillModel {
             const result = await pool.request()
                 .input('InvoiceNo', invoiceNo)
                 .input('PaymentMode', paymentMode)
+                // Tính toán lại tổng tiền lần cuối, cập nhật trạng thái hóa đơn thành 'Paid' (Đã thanh toán) và chuyển tất cả các phòng trong đơn sang trạng thái 'CheckedOut'.
                 .query(`
                     DECLARE @TotalAmount DECIMAL(18,2);
                     
@@ -99,6 +102,7 @@ class BillModel {
             // Get Bill info
             const billQuery = await pool.request()
                 .input('InvoiceNo', invoiceNo)
+                // Lấy thông tin chi tiết của một hóa đơn cụ thể (Thông tin thanh toán, thông tin khách hàng) để hiển thị chi tiết hoặc in hóa đơn.
                 .query(`
                     SELECT b.InvoiceNo, b.TotalAmount, b.PaymentStatus, b.PaymentMode, b.PaymentDate,
                            g.FirstName + ' ' + g.LastName AS GuestName, g.PhoneNo, g.Email
@@ -116,6 +120,7 @@ class BillModel {
             // Get Bookings attached to this Bill
             const bookingsQuery = await pool.request()
                 .input('InvoiceNo', invoiceNo)
+                // Lấy danh sách các phòng chi tiết nằm trong hóa đơn đang được xem để hiển thị trên biên lai.
                 .query(`
                     SELECT BookingID, RoomType, RoomNo, ArrivalDate, DepartureDate, NumAdults, NumChildren
                     FROM Booking

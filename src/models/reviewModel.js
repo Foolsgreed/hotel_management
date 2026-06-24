@@ -8,6 +8,7 @@ class ReviewModel {
             // Check if already reviewed
             const checkQuery = await pool.request()
                 .input('InvoiceNo', invoiceNo)
+                // Kiểm tra xem Hóa đơn này đã được khách hàng đánh giá hay chưa để tránh tình trạng spam đánh giá (Mỗi hóa đơn chỉ được đánh giá 1 lần).
                 .query(`SELECT * FROM Review WHERE InvoiceNo = @InvoiceNo`);
 
             if (checkQuery.recordset.length > 0) {
@@ -15,6 +16,14 @@ class ReviewModel {
             }
 
             const result = await pool.request()
+                // Xác minh xem khách hàng đang đăng nhập có thực sự là chủ của Hóa đơn này không, và trạng thái đơn đã là 'CheckedOut' (Trả phòng) chưa thì mới cho phép đánh giá.
+                .query(`
+                    SELECT b.BookingStatus
+                    FROM Booking b
+                    WHERE b.InvoiceNo = @InvoiceNo AND b.GuestID = @GuestID
+                `);
+            // Lưu bài đánh giá của khách hàng vào hệ thống.
+            await pool.request()
                 .input('GuestID', guestId)
                 .input('InvoiceNo', invoiceNo)
                 .input('Rating', rating)
@@ -24,13 +33,13 @@ class ReviewModel {
                     OUTPUT INSERTED.ReviewID
                     VALUES (@GuestID, @InvoiceNo, @Rating, @Comment, GETDATE())
                 `);
-                
-            // Update the Hotel StarRating based on the new average
+
+            // Tính toán lại điểm số trung bình của toàn bộ khách sạn
             await pool.request().query(`
                 UPDATE Hotel 
                 SET StarRating = (SELECT ROUND(AVG(CAST(Rating AS FLOAT)), 1) FROM Review)
             `);
-                
+
             return result.recordset[0];
         } catch (error) {
             throw error;
@@ -42,6 +51,7 @@ class ReviewModel {
             const pool = await poolPromise;
             const result = await pool.request()
                 .input('Limit', limit)
+                // Lấy danh sách các bài đánh giá mới nhất
                 .query(`
                     SELECT TOP (@Limit) r.ReviewID, r.Rating, r.Comment, r.ReviewDate, g.FirstName, g.LastName
                     FROM Review r
@@ -57,6 +67,7 @@ class ReviewModel {
     static async getAverageRating() {
         try {
             const pool = await poolPromise;
+            // Tính điểm đánh giá trung bình
             const result = await pool.request().query(`
                 SELECT ROUND(AVG(CAST(Rating AS FLOAT)), 1) as AvgRating 
                 FROM Review

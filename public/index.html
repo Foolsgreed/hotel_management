@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -33,12 +35,12 @@
         <!-- JW Marriott style Booking Bar -->
         <div class="booking-bar">
             <form id="search-form" class="booking-form">
-                <div class="form-group">
-                    <label>DATES (1 NIGHT)</label>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <input type="date" id="search-arrival" required>
-                        <span style="color:#aaa;">→</span>
-                        <input type="date" id="search-departure" required>
+                <div class="form-group" style="position: relative;">
+                    <label>DATES</label>
+                    <div style="display:flex; gap:10px; align-items:center; background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
+                        <input type="text" id="date-range-picker" placeholder="Select check-in & check-out" readonly style="background: transparent; border: none; color: white; width: 220px; font-family: inherit; font-size: 1rem; cursor: pointer; outline: none;">
+                        <input type="hidden" id="search-arrival" required>
+                        <input type="hidden" id="search-departure" required>
                     </div>
                 </div>
                 <div class="form-divider"></div>
@@ -219,7 +221,7 @@
         </div>
     </section>
 
-    <section id="reviews" class="reviews-section" style="padding: 5rem 10%; background: #1a1c23;">
+    <section id="reviews" class="reviews-section" style="padding: 5rem 0; background: #1a1c23; overflow: hidden;">
         <div class="section-title">
             <h2 style="color: #fff; text-align: center; margin-bottom: 0.5rem; font-size: 2.5rem;">
                 What Our Guests Say
@@ -227,8 +229,10 @@
             </h2>
             <p style="color: #aaa; text-align: center; margin-bottom: 3rem;">Real experiences from guests who have stayed at the Grand Palace.</p>
         </div>
-        <div class="reviews-grid" id="reviews-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-            <!-- Injected by JS -->
+        <div class="marquee-wrapper">
+            <div class="marquee-content" id="reviews-container">
+                <!-- Injected by JS -->
+            </div>
         </div>
     </section>
 
@@ -236,6 +240,7 @@
         <p>&copy; 2026 Grand Palace. All rights reserved.</p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>
